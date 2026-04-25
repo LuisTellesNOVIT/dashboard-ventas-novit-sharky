@@ -1298,27 +1298,48 @@ async function fetchDealsFromGviz() {
   return rowsFromGviz(parsed.table);
 }
 
+let lastDealsHash = null;
+
+function dealsHash(rows) {
+  return rows.map(d => [
+    d.cliente, d.estado, d.proyecto, d.empresa,
+    d.setup, d.mensualidad, d.m12, d.m24, d.m36
+  ].join("|")).join("¶");
+}
+
 async function syncFromSheet(silent) {
   const btn = document.getElementById("btnSyncSheet");
   const st = document.getElementById("sheetSyncStatus");
   if (btn) btn.disabled = true;
-  if (st) st.textContent = "Sincronizando…";
-  showSheetBanner("", "");
+  if (!silent) {
+    if (st) st.textContent = "Sincronizando…";
+    showSheetBanner("", "");
+  }
   try {
     const rows = await fetchDealsFromGviz();
-    DEALS = assignDealIds(rows);
-    const foot = document.getElementById("footerSource");
-    if (foot) foot.textContent = "Fuente: Google Sheet · " + rows.length + " oportunidades · gid=" + SHEET_CONFIG.gid;
-    if (st) st.textContent = "Listo · " + rows.length + " registros desde la hoja.";
-    showSheetBanner("ok", "Datos cargados desde Google Sheets. El dashboard y esta vista usan la misma base.");
-    renderAll();
-    renderMantTable();
-    renderDiagMantenimiento();
+    const newHash = dealsHash(rows);
+    const changed = newHash !== lastDealsHash;
+    if (changed) {
+      DEALS = assignDealIds(rows);
+      lastDealsHash = newHash;
+      const foot = document.getElementById("footerSource");
+      if (foot) foot.textContent = "Fuente: Google Sheet · " + rows.length + " oportunidades · gid=" + SHEET_CONFIG.gid;
+      if (st) st.textContent = "Actualizado · " + rows.length + " registros desde la hoja.";
+      if (!silent) {
+        showSheetBanner("ok", "Datos cargados desde Google Sheets. El dashboard y esta vista usan la misma base.");
+      }
+      renderAll();
+      renderMantTable();
+      renderDiagMantenimiento();
+    } else if (!silent) {
+      if (st) st.textContent = "Sin cambios · " + rows.length + " registros.";
+      showSheetBanner("ok", "Datos al día. No hubo cambios en la hoja.");
+    }
   } catch (e) {
     if (st) st.textContent = "";
     const msg = e && e.message ? e.message : String(e);
     if (!silent) showSheetBanner("err", msg);
-    else showSheetBanner("warn", "No se pudo leer la hoja al iniciar; se muestran datos de respaldo. " + msg);
+    else if (lastDealsHash === null) showSheetBanner("warn", "No se pudo leer la hoja al iniciar; se muestran datos de respaldo. " + msg);
     throw e;
   } finally {
     if (btn) btn.disabled = false;
