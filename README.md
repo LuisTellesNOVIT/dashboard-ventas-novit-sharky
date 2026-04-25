@@ -5,11 +5,11 @@ El acceso requiere contraseña — solicítala al administrador.
 
 **URL de acceso:** [https://luistellesnovit.github.io/dashboard-ventas-novit-sharky/](https://luistellesnovit.github.io/dashboard-ventas-novit-sharky/)
 
-## Versión sin cifrado (últimos cambios)
+> El acceso es **únicamente** por `index.html` cifrado. La versión `dashboard_ventas.html` ya no se publica porque contiene el `APPS_SCRIPT_TOKEN` que protege la lectura del Google Sheet privado. Mantén ese archivo solo en tu carpeta local de trabajo (`CRM/`).
 
-Si aún no regeneraste el `index.html` cifrado, puedes usar esta ruta (sin login) para ver los últimos cambios del dashboard:
+## Lectura del Google Sheet privado
 
-- `dashboard_ventas.html`
+El dashboard lee/escribe vía Apps Script (carpeta `google-apps-script/`). El sheet permanece privado; el Apps Script corre con tus credenciales y valida un `ACCESS_TOKEN` en cada request. El mismo valor debe estar en `Code.gs` (servidor) y como `APPS_SCRIPT_TOKEN` en `dashboard_ventas.html` (cliente).
 
 ## Publicar actualizaciones en GitHub (GitHub Pages)
 
