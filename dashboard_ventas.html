@@ -1177,6 +1177,7 @@ const CLIENT_COLOR_PALETTE = [
 
 let activeEmpresa = "ALL";
 let charts = {};
+let autoSyncTimer = null;
 
 function showSheetBanner(kind, text) {
   const el = document.getElementById("sheetBanner");
@@ -1532,6 +1533,14 @@ async function tryInitialSheetLoad() {
   }
 }
 
+function startAutoSync() {
+  if (autoSyncTimer) clearInterval(autoSyncTimer);
+  autoSyncTimer = setInterval(() => {
+    if (document.hidden) return;
+    syncFromSheet(true).catch(() => {});
+  }, 20000);
+}
+
 function getFiltered() {
   if (activeEmpresa === "ALL") return DEALS;
   return DEALS.filter(d => d.empresa.toUpperCase() === activeEmpresa);
@@ -1617,10 +1626,10 @@ function buildKpiList(data) {
     },
     {
       key: "perdido",
-      label: "Perdido",
+      label: "Oportunidades Perdidas",
       cls: "red",
-      value: fmtShort(perdidos.reduce((a, d) => a + d.setup + d.m12, 0)),
-      sub: `${perdidos.length} deals`,
+      value: String(perdidos.length),
+      sub: `${fmtShort(perdidos.reduce((a, d) => a + d.setup + d.m12, 0))} setup + 12m`,
       detail: {
         formula: "Σ (setup + m12) sobre oportunidades en estado Perdido",
         deals: perdidos,
@@ -1889,6 +1898,72 @@ function renderPipelineClientesChart(canvasId, chartKey, term) {
   });
 }
 
+function openClientesKpiModal(key, ctx) {
+  const modal = document.getElementById("kpiModal");
+  if (!modal) return;
+
+  let title = "";
+  let body = "";
+
+  if (key === "clientesUnicos") {
+    title = "Clientes únicos";
+    body += `<div class="kpi-modal-formula">Conteo de clientes distintos según filtros activos.</div>`;
+    body += `<div class="kpi-modal-summary">
+      <span>Resultado</span>
+      <strong>${ctx.totalClientes}</strong>
+      <span>${ctx.totalDeals} ${ctx.totalDeals === 1 ? "oportunidad" : "oportunidades"} registradas</span>
+    </div>`;
+
+    body += ctx.clientes.length === 0
+      ? `<div class="kpi-modal-empty">Sin clientes para mostrar.</div>`
+      : `<table class="kpi-modal-table">
+          <thead>
+            <tr><th>Cliente</th><th class="num">Oportunidades</th><th class="num">Setup + 12m</th></tr>
+          </thead>
+          <tbody>
+            ${ctx.clientes.map(c => `
+              <tr>
+                <td>${escapeHtml(c.cliente)}</td>
+                <td class="num">${c.deals.length}</td>
+                <td class="num">${fmt(c.setup + c.m12)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td style="text-align:right;">TOTAL</td>
+              <td class="num">${ctx.totalDeals}</td>
+              <td class="num">${fmt(ctx.totalValor)}</td>
+            </tr>
+          </tfoot>
+        </table>`;
+  } else if (key === "ticketPromedio") {
+    title = "Ticket promedio";
+    body += `<div class="kpi-modal-formula">Promedio por cliente = Σ(setup + 12m) ÷ clientes únicos.</div>`;
+    body += `<div class="kpi-modal-summary">
+      <span>Resultado</span>
+      <strong>${fmtShort(ctx.ticketProm)}</strong>
+      <span>${ctx.totalClientes} ${ctx.totalClientes === 1 ? "cliente" : "clientes"} considerados</span>
+    </div>`;
+    body += `<div class="kpi-modal-formula">Sustento: ${fmt(ctx.totalValor)} ÷ ${ctx.totalClientes || 1} = ${fmt(ctx.ticketProm)}</div>`;
+  } else if (key === "topCliente") {
+    title = "Top cliente";
+    body += `<div class="kpi-modal-formula">Cliente con mayor Σ(setup + 12m) en el filtro actual.</div>`;
+    body += `<div class="kpi-modal-summary">
+      <span>Resultado</span>
+      <strong>${ctx.top ? escapeHtml(ctx.top.cliente) : "—"}</strong>
+      <span>${ctx.top ? fmt(ctx.top.setup + ctx.top.m12) : "Sin datos"}</span>
+    </div>`;
+  } else {
+    openKpiModal("pipelineActivo");
+    return;
+  }
+
+  document.getElementById("kpiModalTitle").textContent = title;
+  document.getElementById("kpiModalBody").innerHTML = body;
+  modal.classList.add("show");
+}
+
 function renderClientesView() {
   const data = getFiltered();
   const search = (document.getElementById("clientesSearch")?.value || "").toLowerCase().trim();
@@ -1943,29 +2018,34 @@ function renderClientesView() {
   renderPipelineClientesChart("pipelineClientesChartCli36", "pipelineCliCli36", 36);
 
   document.getElementById("clientesKpis").innerHTML = `
-    <div class="kpi blue">
+    <button type="button" class="kpi blue" data-client-kpi="clientesUnicos" aria-label="Ver sustento de Clientes únicos">
       <div class="label">Clientes únicos</div>
       <div class="value">${totalClientes}</div>
       <div class="sub">${totalDeals} oportunidades</div>
-    </div>
-    <button type="button" class="kpi green" data-kpi="pipelineActivo" aria-label="Ver detalle de Pipeline Activo">
+    </button>
+    <button type="button" class="kpi green" id="clientesPipelineKpi" data-kpi="pipelineActivo" aria-label="Ver detalle de Pipeline Activo">
       <div class="label">Pipeline total</div>
       <div class="value">${fmtShort(totalValor)}</div>
       <div class="sub">setup + 12 meses (ver detalle)</div>
     </button>
-    <div class="kpi purple">
+    <button type="button" class="kpi purple" data-client-kpi="ticketPromedio" aria-label="Ver sustento de Ticket promedio">
       <div class="label">Ticket promedio</div>
       <div class="value">${fmtShort(ticketProm)}</div>
       <div class="sub">por cliente</div>
-    </div>
-    <div class="kpi orange">
+    </button>
+    <button type="button" class="kpi orange" data-client-kpi="topCliente" aria-label="Ver sustento de Top cliente">
       <div class="label">Top cliente</div>
       <div class="value" style="font-size: 18px;">${top ? top.cliente : "—"}</div>
       <div class="sub">${top ? fmtShort(top.setup + top.m12) : ""}</div>
-    </div>
+    </button>
   `;
-  document.querySelectorAll('#clientesKpis .kpi[data-kpi]').forEach(btn => {
-    btn.addEventListener("click", () => openKpiModal(btn.dataset.kpi));
+  const pipelineBtn = document.getElementById("clientesPipelineKpi");
+  if (pipelineBtn) {
+    pipelineBtn.addEventListener("click", () => openKpiModal("pipelineActivo"));
+  }
+  const clientCtx = { clientes, totalClientes, totalDeals, totalValor, ticketProm, top };
+  document.querySelectorAll('#clientesKpis [data-client-kpi]').forEach(btn => {
+    btn.addEventListener("click", () => openClientesKpiModal(btn.dataset.clientKpi, clientCtx));
   });
 
   const grid = document.getElementById("clientesGrid");
@@ -2361,12 +2441,14 @@ function setView(view) {
     filt.style.display = "flex";
     title.textContent = "Dashboard de Ventas";
     sub.textContent = "Pipeline NOVIT / SHARKY · Resumen comercial · 2026";
+    syncFromSheet(true).catch(() => {});
     resizeCharts();
   } else if (view === "clientes") {
     cli.classList.remove("hidden");
     filt.style.display = "flex";
     title.textContent = "Clientes";
     sub.textContent = "Vista por cliente · Pipeline agrupado · 2026";
+    syncFromSheet(true).catch(() => {});
     renderClientesView();
   } else {
     mant.classList.remove("hidden");
@@ -2392,6 +2474,7 @@ wireChecklist("checklistBackup", TASKS_BACKUP, "bak");
 wireMantenimientoUI();
 renderAll();
 tryInitialSheetLoad();
+startAutoSync();
 </script>
 </body>
 </html>
