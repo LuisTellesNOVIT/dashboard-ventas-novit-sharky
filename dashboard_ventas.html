@@ -396,6 +396,157 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 16px 18px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    width: 100%;
+    display: block;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    position: relative;
+  }
+  .kpi:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+    border-color: var(--border-strong);
+  }
+  .kpi:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .kpi::after {
+    content: "↗";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-size: 11px;
+    color: var(--soft);
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+  .kpi:hover::after { opacity: 1; }
+  /* KPI modal */
+  .kpi-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .kpi-modal.show { display: flex; }
+  .kpi-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    cursor: pointer;
+  }
+  .kpi-modal-content {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    width: min(920px, 100%);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    overflow: hidden;
+  }
+  .kpi-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .kpi-modal-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  .kpi-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    color: var(--muted);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-family: inherit;
+    line-height: 1;
+  }
+  .kpi-modal-close:hover {
+    background: var(--panel-2);
+    color: var(--text);
+  }
+  .kpi-modal-body {
+    padding: 18px 24px 24px;
+    overflow: auto;
+  }
+  .kpi-modal-formula {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--text);
+    margin-bottom: 12px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    line-height: 1.45;
+  }
+  .kpi-modal-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: var(--panel-2);
+    border-radius: 6px;
+  }
+  .kpi-modal-summary strong {
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .kpi-modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .kpi-modal-table thead th {
+    background: var(--panel-2);
+    font-size: 10px;
+    padding: 10px 12px;
+  }
+  .kpi-modal-table tbody td {
+    padding: 9px 12px;
+  }
+  .kpi-modal-table tfoot td {
+    background: var(--panel-2);
+    border-top: 2px solid var(--border-strong);
+    padding: 10px 12px;
+    font-weight: 600;
+  }
+  .kpi-modal-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    background: var(--panel-2);
+    border-radius: 8px;
+    font-size: 13px;
   }
   .kpi .label {
     color: var(--muted);
@@ -481,13 +632,27 @@
     border-bottom: 1px solid var(--border);
   }
   .group-subtotal td {
-    background: #fff;
-    font-weight: 600;
+    background: var(--panel-2);
+    font-weight: 700;
     color: var(--text);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border-strong);
-    padding: 8px 12px;
-    font-size: 12px;
+    border-top: 2px solid var(--border-strong);
+    border-bottom: 2px solid var(--border-strong);
+    padding: 11px 12px;
+    font-size: 12.5px;
+    letter-spacing: 0.1px;
+  }
+  .group-subtotal td:first-child {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+  .id-cell {
+    color: var(--soft);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.3px;
   }
   .badge {
     display: inline-block;
@@ -563,6 +728,126 @@
   }
   .reco ul { margin: 6px 0 0 0; padding-left: 18px; font-size: 12px; color: var(--text); }
   .reco ul li { margin-bottom: 3px; }
+  /* Clientes view */
+  .clientes-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .clientes-toolbar input[type="search"],
+  .clientes-toolbar select {
+    padding: 9px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
+  }
+  .clientes-toolbar input[type="search"] { flex: 1; min-width: 240px; }
+  .clientes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px;
+  }
+  .cliente-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .cliente-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+  .cliente-card-head .name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: var(--text);
+  }
+  .cliente-card-head .deals-pill {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--panel-2);
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    border: 1px solid var(--border);
+  }
+  .cliente-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .cliente-card-finance {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    margin-bottom: 12px;
+  }
+  .cliente-card-finance .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .cliente-card-finance .lbl {
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .cliente-card-finance .val {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .cliente-card-finance .row.highlight .val { color: var(--purple); }
+  .cliente-card-projects {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+  }
+  .cliente-card-projects li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .cliente-card-projects li:last-child { border-bottom: none; }
+  .cliente-card-projects .proj-name {
+    color: var(--text);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .clientes-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 13px;
+    background: var(--panel);
+    border: 1px dashed var(--border-strong);
+    border-radius: 10px;
+  }
 </style>
 </head>
 <body>
@@ -571,6 +856,7 @@
     <div class="sidebar-brand">NOVIT · SHARKY</div>
     <nav class="sidebar-nav">
       <button type="button" class="nav-item active" data-view="dashboard" id="navDashboard">Dashboard de Ventas</button>
+      <button type="button" class="nav-item" data-view="clientes" id="navClientes">Clientes</button>
       <button type="button" class="nav-item" data-view="mantenimiento" id="navMantenimiento">Mantenimiento CRM</button>
     </nav>
   </aside>
@@ -601,14 +887,19 @@
     </div>
   </section>
 
+  <section class="card" style="margin-bottom: 24px;">
+    <h2>Proyección de Ingresos <span class="meta">setup + recurrente</span></h2>
+    <div class="chart-wrap tall"><canvas id="proyeccionChart"></canvas></div>
+  </section>
+
   <section class="grid-2">
     <div class="card">
-      <h2>Top Clientes <span class="meta">por valor 12 meses</span></h2>
-      <div class="chart-wrap tall"><canvas id="clientesChart"></canvas></div>
+      <h2>Pipeline de Clientes · 12 meses <span class="meta">setup + 12m · sin perdidos</span></h2>
+      <div class="chart-wrap tall"><canvas id="pipelineClientesChartDash12"></canvas></div>
     </div>
     <div class="card">
-      <h2>Proyección de Ingresos <span class="meta">setup + recurrente</span></h2>
-      <div class="chart-wrap tall"><canvas id="proyeccionChart"></canvas></div>
+      <h2>Pipeline de Clientes · 36 meses <span class="meta">setup + 36m · sin perdidos</span></h2>
+      <div class="chart-wrap tall"><canvas id="pipelineClientesChartDash36"></canvas></div>
     </div>
   </section>
 
@@ -623,6 +914,7 @@
       <table id="dealsTable">
         <thead>
           <tr>
+            <th class="num">ID</th>
             <th>Cliente</th>
             <th>Proyecto</th>
             <th>Empresa</th>
@@ -636,7 +928,7 @@
         <tbody></tbody>
         <tfoot>
           <tr style="font-weight: 700; background: var(--text); color: #fff;">
-            <td colspan="3" style="padding: 12px;">TOTAL GENERAL</td>
+            <td colspan="4" style="padding: 12px;">TOTAL GENERAL</td>
             <td class="num" id="totSetup"></td>
             <td class="num" id="totMens"></td>
             <td class="num" id="tot12"></td>
@@ -652,6 +944,35 @@
     <h2>Recomendaciones a Seguir <span class="meta">acciones priorizadas</span></h2>
     <div class="reco-grid" id="recoGrid"></div>
   </section>
+  </div>
+
+  <div id="viewClientes" class="view hidden">
+    <section class="kpi-grid" id="clientesKpis"></section>
+
+    <section class="grid-2" style="margin-bottom: 16px;">
+      <div class="card">
+        <h2>Pipeline de Clientes · 12 meses <span class="meta">setup + 12m · sin perdidos</span></h2>
+        <div class="chart-wrap tall"><canvas id="pipelineClientesChartCli12"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Pipeline de Clientes · 36 meses <span class="meta">setup + 36m · sin perdidos</span></h2>
+        <div class="chart-wrap tall"><canvas id="pipelineClientesChartCli36"></canvas></div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-bottom: 16px;">
+      <div class="clientes-toolbar">
+        <input type="search" id="clientesSearch" placeholder="Buscar cliente o proyecto..." autocomplete="off">
+        <select id="clientesSort" aria-label="Ordenar por">
+          <option value="valor">Mayor pipeline (setup + 12m)</option>
+          <option value="ltv">Mayor LTV (setup + 36m)</option>
+          <option value="deals">Más deals</option>
+          <option value="nombre">Nombre A → Z</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="clientes-grid" id="clientesGrid"></section>
   </div>
 
   <div id="viewMantenimiento" class="view hidden">
@@ -783,6 +1104,17 @@
   </div>
 
   <footer id="footerSource">Fuente: datos locales de respaldo · Sincroniza con la hoja en Mantenimiento CRM</footer>
+
+  <div id="kpiModal" class="kpi-modal" role="dialog" aria-modal="true" aria-labelledby="kpiModalTitle">
+    <div class="kpi-modal-overlay" id="kpiModalOverlay"></div>
+    <div class="kpi-modal-content">
+      <div class="kpi-modal-header">
+        <h3 class="kpi-modal-title" id="kpiModalTitle"></h3>
+        <button type="button" class="kpi-modal-close" id="kpiModalClose" aria-label="Cerrar">×</button>
+      </div>
+      <div class="kpi-modal-body" id="kpiModalBody"></div>
+    </div>
+  </div>
   </div>
 </div>
 
@@ -814,7 +1146,11 @@ const DEALS_EMBEDDED = [
   { cliente: "Mapfre", estado: "Ganado", proyecto: "OutSourcing Yennifer Lara", empresa: "NOVIT", setup: 0, mensualidad: 3529, m12: 38824, m24: 0, m36: 0 },
 ];
 
-let DEALS = DEALS_EMBEDDED.map(d => ({ ...d }));
+function assignDealIds(arr) {
+  arr.forEach((d, i) => { d.id = i + 1; });
+  return arr;
+}
+let DEALS = assignDealIds(DEALS_EMBEDDED.map(d => ({ ...d })));
 
 const fmt = n => "US$" + Math.round(n).toLocaleString("en-US");
 const fmtShort = n => {
@@ -832,6 +1168,12 @@ const ESTADO_COLORS = {
   "Perdido": "#dc2626",
 };
 const ESTADO_ORDER = ["Ganado", "Firma del Contrato", "Negociación", "Propuesta", "Demo", "Perdido"];
+const CLIENT_COLOR_PALETTE = [
+  "#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#eab308",
+  "#22c55e", "#06b6d4", "#ef4444", "#14b8a6", "#f59e0b",
+  "#6366f1", "#84cc16", "#d946ef", "#0ea5e9", "#f43f5e",
+  "#10b981", "#a855f7", "#ea580c", "#dc2626", "#0284c7",
+];
 
 let activeEmpresa = "ALL";
 let charts = {};
@@ -963,7 +1305,7 @@ async function syncFromSheet(silent) {
   showSheetBanner("", "");
   try {
     const rows = await fetchDealsFromGviz();
-    DEALS = rows;
+    DEALS = assignDealIds(rows);
     const foot = document.getElementById("footerSource");
     if (foot) foot.textContent = "Fuente: Google Sheet · " + rows.length + " oportunidades · gid=" + SHEET_CONFIG.gid;
     if (st) st.textContent = "Listo · " + rows.length + " registros desde la hoja.";
@@ -1195,42 +1537,232 @@ function getFiltered() {
   return DEALS.filter(d => d.empresa.toUpperCase() === activeEmpresa);
 }
 
-function renderKPIs() {
-  const data = getFiltered();
-  const ganados = data.filter(d => ["Ganado","Firma del Contrato"].includes(d.estado));
-  const activos = data.filter(d => !["Perdido"].includes(d.estado));
+function buildKpiList(data) {
+  const ganados = data.filter(d => ["Ganado", "Firma del Contrato"].includes(d.estado));
+  const activos = data.filter(d => d.estado !== "Perdido");
   const perdidos = data.filter(d => d.estado === "Perdido");
-  const propuestas = data.filter(d => ["Propuesta","Negociación","Demo"].includes(d.estado));
+  const propuestas = data.filter(d => ["Propuesta", "Negociación", "Demo"].includes(d.estado));
 
-  const setupGanado = ganados.reduce((a,d) => a + d.setup, 0);
-  const arrGanado = ganados.reduce((a,d) => a + d.m12, 0);
-  const pipelineActivo = activos.reduce((a,d) => a + d.setup + d.m12, 0);
-  const pipelinePropuesta = propuestas.reduce((a,d) => a + d.setup + d.m12, 0);
-  const ltv36Ganado = ganados.reduce((a,d) => a + d.setup + d.m36, 0);
-
+  const arrGanado = ganados.reduce((a, d) => a + d.m12, 0);
+  const setupGanado = ganados.reduce((a, d) => a + d.setup, 0);
   const winRate = (ganados.length + perdidos.length > 0)
     ? (ganados.length / (ganados.length + perdidos.length) * 100)
     : 0;
 
-  const kpis = [
-    { label: "Pipeline Activo", value: fmtShort(pipelineActivo), sub: `${activos.length} oportunidades`, cls: "blue" },
-    { label: "Ganado / Firmado", value: fmtShort(setupGanado + arrGanado), sub: `${ganados.length} deals · setup + 12m`, cls: "green" },
-    { label: "ARR Ganado (12m)", value: fmtShort(arrGanado), sub: "ingreso recurrente anual", cls: "green" },
-    { label: "LTV 36m Ganado", value: fmtShort(ltv36Ganado), sub: "valor de vida del cliente", cls: "purple" },
-    { label: "En Propuesta/Negoc.", value: fmtShort(pipelinePropuesta), sub: `${propuestas.length} oportunidades`, cls: "yellow" },
-    { label: "Perdido", value: fmtShort(perdidos.reduce((a,d)=>a+d.setup+d.m12,0)), sub: `${perdidos.length} deals`, cls: "red" },
-    { label: "Tasa de Cierre", value: winRate.toFixed(0) + "%", sub: "ganados vs decididos", cls: "orange" },
-    { label: "Total Oportunidades", value: data.length, sub: "en el pipeline", cls: "blue" },
+  return [
+    {
+      key: "pipelineActivo",
+      label: "Pipeline Activo",
+      cls: "blue",
+      value: fmtShort(activos.reduce((a, d) => a + d.setup + d.m12, 0)),
+      sub: `${activos.length} oportunidades`,
+      detail: {
+        formula: "Σ (setup + m12) sobre oportunidades con estado ≠ Perdido",
+        deals: activos,
+        amountFn: d => d.setup + d.m12,
+        amountLabel: "Setup + 12m",
+      },
+    },
+    {
+      key: "ganadoFirmado",
+      label: "Ganado / Firmado",
+      cls: "green",
+      value: fmtShort(setupGanado + arrGanado),
+      sub: `${ganados.length} deals · setup + 12m`,
+      detail: {
+        formula: "Σ (setup + m12) sobre oportunidades en estado Ganado o Firma del Contrato",
+        deals: ganados,
+        amountFn: d => d.setup + d.m12,
+        amountLabel: "Setup + 12m",
+      },
+    },
+    {
+      key: "arrGanado",
+      label: "ARR Ganado (12m)",
+      cls: "green",
+      value: fmtShort(arrGanado),
+      sub: "ingreso recurrente anual",
+      detail: {
+        formula: "Σ (m12) sobre oportunidades en estado Ganado o Firma del Contrato",
+        deals: ganados,
+        amountFn: d => d.m12,
+        amountLabel: "12 meses",
+      },
+    },
+    {
+      key: "ltv36",
+      label: "LTV 36m Ganado",
+      cls: "purple",
+      value: fmtShort(ganados.reduce((a, d) => a + d.setup + d.m36, 0)),
+      sub: "valor de vida del cliente",
+      detail: {
+        formula: "Σ (setup + m36) sobre oportunidades en estado Ganado o Firma del Contrato",
+        deals: ganados,
+        amountFn: d => d.setup + d.m36,
+        amountLabel: "Setup + 36m",
+      },
+    },
+    {
+      key: "propuestaNegoc",
+      label: "En Propuesta/Negoc.",
+      cls: "yellow",
+      value: fmtShort(propuestas.reduce((a, d) => a + d.setup + d.m12, 0)),
+      sub: `${propuestas.length} oportunidades`,
+      detail: {
+        formula: "Σ (setup + m12) sobre oportunidades en estado Propuesta, Negociación o Demo",
+        deals: propuestas,
+        amountFn: d => d.setup + d.m12,
+        amountLabel: "Setup + 12m",
+      },
+    },
+    {
+      key: "perdido",
+      label: "Perdido",
+      cls: "red",
+      value: fmtShort(perdidos.reduce((a, d) => a + d.setup + d.m12, 0)),
+      sub: `${perdidos.length} deals`,
+      detail: {
+        formula: "Σ (setup + m12) sobre oportunidades en estado Perdido",
+        deals: perdidos,
+        amountFn: d => d.setup + d.m12,
+        amountLabel: "Setup + 12m",
+      },
+    },
+    {
+      key: "tasaCierre",
+      label: "Tasa de Cierre",
+      cls: "orange",
+      value: winRate.toFixed(0) + "%",
+      sub: "ganados vs decididos",
+      detail: {
+        formula: `Ganados ÷ (Ganados + Perdidos) = ${ganados.length} ÷ (${ganados.length} + ${perdidos.length}) = ${winRate.toFixed(1)}%`,
+        deals: [...ganados, ...perdidos],
+        amountFn: d => d.setup + d.m12,
+        amountLabel: "Setup + 12m",
+        ganadosCount: ganados.length,
+        perdidosCount: perdidos.length,
+        isPercent: true,
+      },
+    },
+    {
+      key: "totalOps",
+      label: "Total Oportunidades",
+      cls: "blue",
+      value: data.length,
+      sub: "en el pipeline",
+      detail: {
+        formula: "Conteo de todas las oportunidades en el pipeline (con filtro de empresa aplicado)",
+        deals: data,
+        amountFn: d => d.setup + d.m12,
+        amountLabel: "Setup + 12m",
+      },
+    },
   ];
+}
+
+function renderKPIs() {
+  const data = getFiltered();
+  const kpis = buildKpiList(data);
 
   document.getElementById("kpis").innerHTML = kpis.map(k => `
-    <div class="kpi ${k.cls}">
+    <button type="button" class="kpi ${k.cls}" data-kpi="${k.key}" aria-label="Ver detalle de ${k.label}">
       <div class="label">${k.label}</div>
       <div class="value">${k.value}</div>
       <div class="sub">${k.sub}</div>
-    </div>
+    </button>
   `).join("");
+
+  document.querySelectorAll('#kpis .kpi[data-kpi]').forEach(btn => {
+    btn.addEventListener("click", () => openKpiModal(btn.dataset.kpi));
+  });
 }
+
+function openKpiModal(key) {
+  const data = getFiltered();
+  const kpi = buildKpiList(data).find(k => k.key === key);
+  if (!kpi) return;
+
+  const modal = document.getElementById("kpiModal");
+  const slug = s => s.toLowerCase().replace(/[^a-z]/g, "");
+  const detail = kpi.detail;
+  const isSetup12 = detail.amountLabel === "Setup + 12m";
+
+  let body = "";
+  body += `<div class="kpi-modal-formula">${detail.formula}</div>`;
+  const totalSetup = detail.deals.reduce((a, d) => a + (Number(d.setup) || 0), 0);
+  const total12 = detail.deals.reduce((a, d) => a + (Number(d.m12) || 0), 0);
+  body += `<div class="kpi-modal-summary">
+    <span>Resultado</span>
+    <strong>${kpi.value}</strong>
+    <span>${detail.deals.length} ${detail.deals.length === 1 ? "registro" : "registros"} considerados</span>
+  </div>`;
+  if (detail.amountLabel === "Setup + 12m" && detail.deals.length > 0) {
+    body += `<div class="kpi-modal-formula">Sustento: Setup ${fmt(totalSetup)} + 12 meses ${fmt(total12)} = ${fmt(totalSetup + total12)}</div>`;
+  }
+
+  if (detail.deals.length === 0) {
+    body += `<div class="kpi-modal-empty">Sin registros que cumplan el criterio.</div>`;
+  } else {
+    const totalAmount = detail.deals.reduce((a, d) => a + (detail.amountFn ? detail.amountFn(d) : 0), 0);
+    const totalSetupRows = detail.deals.reduce((a, d) => a + (Number(d.setup) || 0), 0);
+    const total12Rows = detail.deals.reduce((a, d) => a + (Number(d.m12) || 0), 0);
+    body += `<table class="kpi-modal-table">
+      <thead>
+        <tr>
+          <th class="num">ID</th>
+          <th>Cliente</th>
+          <th>Proyecto</th>
+          <th>Estado</th>
+          <th>Empresa</th>
+          ${isSetup12 ? `<th class="num">Setup</th><th class="num">12 meses</th><th class="num">Total</th>` : (detail.amountFn ? `<th class="num">${detail.amountLabel}</th>` : "")}
+        </tr>
+      </thead>
+      <tbody>
+        ${detail.deals
+          .slice()
+          .sort((a, b) => (detail.amountFn ? detail.amountFn(b) - detail.amountFn(a) : 0))
+          .map(d => `
+            <tr>
+              <td class="num id-cell">#${String(d.id).padStart(3, "0")}</td>
+              <td>${d.cliente}</td>
+              <td>${d.proyecto}</td>
+              <td><span class="badge ${slug(d.estado)}">${d.estado}</span></td>
+              <td><span class="badge empresa-${d.empresa.toLowerCase()}">${d.empresa}</span></td>
+              ${isSetup12
+                ? `<td class="num">${fmt(d.setup || 0)}</td><td class="num">${fmt(d.m12 || 0)}</td><td class="num">${fmt((d.setup || 0) + (d.m12 || 0))}</td>`
+                : (detail.amountFn ? `<td class="num">${fmt(detail.amountFn(d))}</td>` : "")}
+            </tr>
+          `).join("")}
+      </tbody>
+      ${detail.amountFn && !detail.isPercent ? `
+        <tfoot>
+          <tr>
+            <td colspan="5" style="text-align: right;">${detail.amountLabel === "Setup + 12m" ? "TOTAL (SETUP + 12M)" : "TOTAL"}</td>
+            ${isSetup12
+              ? `<td class="num">${fmt(totalSetupRows)}</td><td class="num">${fmt(total12Rows)}</td><td class="num">${fmt(totalSetupRows + total12Rows)}</td>`
+              : `<td class="num">${fmt(totalAmount)}</td>`}
+          </tr>
+        </tfoot>
+      ` : ""}
+    </table>`;
+  }
+
+  document.getElementById("kpiModalTitle").textContent = kpi.label;
+  document.getElementById("kpiModalBody").innerHTML = body;
+  modal.classList.add("show");
+}
+
+function closeKpiModal() {
+  document.getElementById("kpiModal").classList.remove("show");
+}
+
+document.getElementById("kpiModalClose").addEventListener("click", closeKpiModal);
+document.getElementById("kpiModalOverlay").addEventListener("click", closeKpiModal);
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && document.getElementById("kpiModal").classList.contains("show")) {
+    closeKpiModal();
+  }
+});
 
 function renderEstadoChart() {
   const data = getFiltered();
@@ -1244,12 +1776,27 @@ function renderEstadoChart() {
 
   if (charts.estado) charts.estado.destroy();
   charts.estado = new Chart(document.getElementById("estadoChart"), {
-    type: "doughnut",
-    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: "#fff", borderWidth: 2 }] },
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Setup + 12m",
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }],
+    },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: "#64748b", callback: v => fmtShort(v) }, grid: { color: "#e2e8f0" } },
+        y: { ticks: { color: "#0f172a", font: { size: 12 } }, grid: { display: false } },
+      },
       plugins: {
-        legend: { position: "bottom", labels: { color: "#0f172a", font: { size: 11 } } },
+        legend: { display: false },
         tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmt(ctx.raw)}` } },
       },
     },
@@ -1291,26 +1838,48 @@ function renderEmpresaChart() {
   });
 }
 
-function renderClientesChart() {
+function renderPipelineClientesChart(canvasId, chartKey, term) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const horizonField = term === 36 ? "m36" : "m12";
   const data = getFiltered().filter(d => d.estado !== "Perdido");
   const grouped = {};
   data.forEach(d => {
-    grouped[d.cliente] = (grouped[d.cliente] || 0) + d.m12 + d.setup;
+    grouped[d.cliente] = (grouped[d.cliente] || 0) + d.setup + (d[horizonField] || 0);
   });
-  const sorted = Object.entries(grouped).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  const sorted = Object.entries(grouped)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1]);
   const labels = sorted.map(s => s[0]);
   const values = sorted.map(s => s[1]);
+  const colors = labels.map((_, i) => CLIENT_COLOR_PALETTE[i % CLIENT_COLOR_PALETTE.length]);
 
-  if (charts.clientes) charts.clientes.destroy();
-  charts.clientes = new Chart(document.getElementById("clientesChart"), {
+  if (charts[chartKey]) charts[chartKey].destroy();
+  charts[chartKey] = new Chart(canvas, {
     type: "bar",
-    data: { labels, datasets: [{ label: "Setup + 12m", data: values, backgroundColor: "#7c3aed" }] },
+    data: {
+      labels,
+      datasets: [{
+        label: `Setup + ${term} meses`,
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }],
+    },
     options: {
-      indexAxis: "y",
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       scales: {
-        x: { ticks: { color: "#64748b", callback: v => fmtShort(v) }, grid: { color: "#e2e8f0" } },
-        y: { ticks: { color: "#0f172a", font: { size: 11 } }, grid: { display: false } },
+        x: {
+          ticks: { color: "#0f172a", font: { size: 11 }, maxRotation: 45, minRotation: 45 },
+          grid: { display: false },
+        },
+        y: {
+          ticks: { color: "#64748b", callback: v => fmtShort(v) },
+          grid: { color: "#e2e8f0" },
+        },
       },
       plugins: {
         legend: { display: false },
@@ -1318,6 +1887,127 @@ function renderClientesChart() {
       },
     },
   });
+}
+
+function renderClientesView() {
+  const data = getFiltered();
+  const search = (document.getElementById("clientesSearch")?.value || "").toLowerCase().trim();
+  const sortBy = document.getElementById("clientesSort")?.value || "valor";
+  const slug = s => s.toLowerCase().replace(/[^a-z]/g, "");
+
+  const grouped = {};
+  data.forEach(d => {
+    if (!grouped[d.cliente]) {
+      grouped[d.cliente] = {
+        cliente: d.cliente,
+        deals: [],
+        setup: 0,
+        mensualidad: 0,
+        m12: 0,
+        m24: 0,
+        m36: 0,
+        empresas: new Set(),
+      };
+    }
+    const c = grouped[d.cliente];
+    c.deals.push(d);
+    c.setup += d.setup;
+    c.mensualidad += d.mensualidad;
+    c.m12 += d.m12;
+    c.m24 += d.m24;
+    c.m36 += d.m36;
+    c.empresas.add(d.empresa.toUpperCase());
+  });
+
+  let clientes = Object.values(grouped);
+
+  if (search) {
+    clientes = clientes.filter(c =>
+      c.cliente.toLowerCase().includes(search) ||
+      c.deals.some(d => d.proyecto.toLowerCase().includes(search))
+    );
+  }
+
+  if (sortBy === "valor") clientes.sort((a, b) => (b.setup + b.m12) - (a.setup + a.m12));
+  else if (sortBy === "ltv") clientes.sort((a, b) => (b.setup + b.m36) - (a.setup + a.m36));
+  else if (sortBy === "deals") clientes.sort((a, b) => b.deals.length - a.deals.length);
+  else if (sortBy === "nombre") clientes.sort((a, b) => a.cliente.localeCompare(b.cliente));
+
+  const totalClientes = clientes.length;
+  const totalDeals = clientes.reduce((a, c) => a + c.deals.length, 0);
+  const totalValor = clientes.reduce((a, c) => a + c.setup + c.m12, 0);
+  const ticketProm = totalClientes ? totalValor / totalClientes : 0;
+  const top = [...clientes].sort((a, b) => (b.setup + b.m12) - (a.setup + a.m12))[0];
+
+  renderPipelineClientesChart("pipelineClientesChartCli12", "pipelineCliCli12", 12);
+  renderPipelineClientesChart("pipelineClientesChartCli36", "pipelineCliCli36", 36);
+
+  document.getElementById("clientesKpis").innerHTML = `
+    <div class="kpi blue">
+      <div class="label">Clientes únicos</div>
+      <div class="value">${totalClientes}</div>
+      <div class="sub">${totalDeals} oportunidades</div>
+    </div>
+    <button type="button" class="kpi green" data-kpi="pipelineActivo" aria-label="Ver detalle de Pipeline Activo">
+      <div class="label">Pipeline total</div>
+      <div class="value">${fmtShort(totalValor)}</div>
+      <div class="sub">setup + 12 meses (ver detalle)</div>
+    </button>
+    <div class="kpi purple">
+      <div class="label">Ticket promedio</div>
+      <div class="value">${fmtShort(ticketProm)}</div>
+      <div class="sub">por cliente</div>
+    </div>
+    <div class="kpi orange">
+      <div class="label">Top cliente</div>
+      <div class="value" style="font-size: 18px;">${top ? top.cliente : "—"}</div>
+      <div class="sub">${top ? fmtShort(top.setup + top.m12) : ""}</div>
+    </div>
+  `;
+  document.querySelectorAll('#clientesKpis .kpi[data-kpi]').forEach(btn => {
+    btn.addEventListener("click", () => openKpiModal(btn.dataset.kpi));
+  });
+
+  const grid = document.getElementById("clientesGrid");
+  if (clientes.length === 0) {
+    grid.innerHTML = `<div class="clientes-empty">Sin clientes que coincidan con los filtros.</div>`;
+    return;
+  }
+
+  grid.innerHTML = clientes.map(c => {
+    const empresasBadges = [...c.empresas].map(e =>
+      `<span class="badge empresa-${e.toLowerCase()}">${e}</span>`
+    ).join(" ");
+    const ltv = c.setup + c.m36;
+    const projectsList = c.deals
+      .slice()
+      .sort((a, b) => (b.setup + b.m12) - (a.setup + a.m12))
+      .map(d => `
+        <li>
+          <span class="proj-name" title="${d.proyecto}">${d.proyecto}</span>
+          <span class="badge ${slug(d.estado)}">${d.estado}</span>
+        </li>
+      `).join("");
+
+    return `
+      <div class="cliente-card">
+        <div class="cliente-card-head">
+          <h3 class="name">${c.cliente}</h3>
+          <span class="deals-pill">${c.deals.length} ${c.deals.length === 1 ? "deal" : "deals"}</span>
+        </div>
+        <div class="cliente-card-meta">${empresasBadges}</div>
+        <div class="cliente-card-finance">
+          <div class="row"><span class="lbl">Setup</span><span class="val">${fmt(c.setup)}</span></div>
+          <div class="row"><span class="lbl">Mensual</span><span class="val">${fmt(c.mensualidad)}</span></div>
+          <div class="row"><span class="lbl">12 m</span><span class="val">${fmt(c.m12)}</span></div>
+          <div class="row"><span class="lbl">24 m</span><span class="val">${fmt(c.m24)}</span></div>
+          <div class="row"><span class="lbl">36 m</span><span class="val">${fmt(c.m36)}</span></div>
+          <div class="row highlight"><span class="lbl">LTV (setup + 36m)</span><span class="val">${fmt(ltv)}</span></div>
+        </div>
+        <ul class="cliente-card-projects">${projectsList}</ul>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderProyeccionChart() {
@@ -1400,7 +2090,7 @@ function renderTable() {
 
     html += `
       <tr class="group-header">
-        <td colspan="8">
+        <td colspan="9">
           <span class="badge ${slug(estado)}">${estado}</span>
           &nbsp;&nbsp;<span style="color: var(--soft); font-weight: 500;">${rows.length} ${rows.length === 1 ? "oportunidad" : "oportunidades"}</span>
         </td>
@@ -1410,6 +2100,7 @@ function renderTable() {
     rows.forEach(d => {
       html += `
         <tr>
+          <td class="num id-cell">#${String(d.id).padStart(3, "0")}</td>
           <td>${d.cliente}</td>
           <td>${d.proyecto}</td>
           <td><span class="badge empresa-${d.empresa.toLowerCase()}">${d.empresa}</span></td>
@@ -1424,7 +2115,7 @@ function renderTable() {
 
     html += `
       <tr class="group-subtotal">
-        <td colspan="3" style="text-align: right;">Subtotal ${estado}</td>
+        <td colspan="4" style="text-align: right;">Subtotal ${estado}</td>
         <td class="num">${fmt(sumSetup)}</td>
         <td class="num">${fmt(sumMens)}</td>
         <td class="num">${fmt(sum12)}</td>
@@ -1558,11 +2249,13 @@ function renderAll() {
   renderKPIs();
   renderEstadoChart();
   renderEmpresaChart();
-  renderClientesChart();
   renderProyeccionChart();
+  renderPipelineClientesChart("pipelineClientesChartDash12", "pipelineCliDash12", 12);
+  renderPipelineClientesChart("pipelineClientesChartDash36", "pipelineCliDash36", 36);
   renderFunnelChart();
   renderTable();
   renderRecomendaciones();
+  renderClientesView();
 }
 
 document.querySelectorAll("#empresaFilter .filter-btn").forEach(btn => {
@@ -1649,6 +2342,7 @@ function resizeCharts() {
 
 function setView(view) {
   const dash = document.getElementById("viewDashboard");
+  const cli = document.getElementById("viewClientes");
   const mant = document.getElementById("viewMantenimiento");
   const filt = document.getElementById("empresaFilter");
   const title = document.getElementById("mainTitle");
@@ -1658,15 +2352,23 @@ function setView(view) {
     b.classList.toggle("active", b.dataset.view === view);
   });
 
+  dash.classList.add("hidden");
+  cli.classList.add("hidden");
+  mant.classList.add("hidden");
+
   if (view === "dashboard") {
     dash.classList.remove("hidden");
-    mant.classList.add("hidden");
     filt.style.display = "flex";
     title.textContent = "Dashboard de Ventas";
     sub.textContent = "Pipeline NOVIT / SHARKY · Resumen comercial · 2026";
     resizeCharts();
+  } else if (view === "clientes") {
+    cli.classList.remove("hidden");
+    filt.style.display = "flex";
+    title.textContent = "Clientes";
+    sub.textContent = "Vista por cliente · Pipeline agrupado · 2026";
+    renderClientesView();
   } else {
-    dash.classList.add("hidden");
     mant.classList.remove("hidden");
     filt.style.display = "none";
     title.textContent = "Mantenimiento CRM";
@@ -1677,7 +2379,11 @@ function setView(view) {
 }
 
 document.getElementById("navDashboard").addEventListener("click", () => setView("dashboard"));
+document.getElementById("navClientes").addEventListener("click", () => setView("clientes"));
 document.getElementById("navMantenimiento").addEventListener("click", () => setView("mantenimiento"));
+
+document.getElementById("clientesSearch").addEventListener("input", renderClientesView);
+document.getElementById("clientesSort").addEventListener("change", renderClientesView);
 
 wireChecklist("checklistDef", TASKS_DEF, "def");
 wireChecklist("checklistHigiene", TASKS_HIGIENE, "hig");
