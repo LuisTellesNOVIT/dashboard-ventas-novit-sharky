@@ -5,6 +5,12 @@ El acceso requiere contraseña — solicítala al administrador.
 
 **URL de acceso:** [https://luistellesnovit.github.io/dashboard-ventas-novit-sharky/](https://luistellesnovit.github.io/dashboard-ventas-novit-sharky/)
 
+## Versión sin cifrado (últimos cambios)
+
+Si aún no regeneraste el `index.html` cifrado, puedes usar esta ruta (sin login) para ver los últimos cambios del dashboard:
+
+- `dashboard_ventas.html`
+
 ## Publicar actualizaciones en GitHub (GitHub Pages)
 
 1. En la carpeta **padre** del repo (`…/CRM`), regenera el `index.html` cifrado a partir de `dashboard_ventas.html` y el template de login:

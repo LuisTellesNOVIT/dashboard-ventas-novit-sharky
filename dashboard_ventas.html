@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Ventas — NOVIT / SHARKY</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --panel-2: #f8fafc;
+    --text: #0f172a;
+    --muted: #64748b;
+    --soft: #94a3b8;
+    --accent: #0ea5e9;
+    --green: #16a34a;
+    --green-soft: #dcfce7;
+    --yellow: #ca8a04;
+    --yellow-soft: #fef9c3;
+    --red: #dc2626;
+    --red-soft: #fee2e2;
+    --purple: #7c3aed;
+    --purple-soft: #ede9fe;
+    --blue: #2563eb;
+    --blue-soft: #dbeafe;
+    --orange: #ea580c;
+    --orange-soft: #ffedd5;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 0;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+  }
+  .sidebar {
+    width: 232px;
+    flex-shrink: 0;
+    background: var(--panel-2);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .sidebar-brand {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    padding: 0 8px;
+  }
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-item:hover {
+    background: #fff;
+    color: var(--text);
+  }
+  .nav-item.active {
+    background: var(--text);
+    color: #fff;
+  }
+  .main {
+    flex: 1;
+    min-width: 0;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+  }
+  .view { display: block; }
+  .view.hidden { display: none; }
+  .mantenimiento-intro {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 20px 0;
+    max-width: 720px;
+  }
+  .diag-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .diag-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .diag-card .n {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .diag-card.warn .n { color: var(--yellow); }
+  .diag-card.ok .n { color: var(--green); }
+  .diag-card .lbl {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-top: 4px;
+  }
+  .checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist input[type="checkbox"] {
+    margin-top: 3px;
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .checklist label { cursor: pointer; flex: 1; }
+  .checklist .hint {
+    display: block;
+    font-size: 11px;
+    color: var(--soft);
+    margin-top: 4px;
+  }
+  .sheet-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: filter 0.15s;
+  }
+  .sheet-cta:hover { filter: brightness(1.08); color: #fff; }
+  .sheet-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sheet-cta-row { margin-top: 4px; }
+  .sheet-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .sheet-toolbar button {
+    background: var(--text);
+    color: #fff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .sheet-toolbar button:hover { opacity: 0.92; }
+  .sheet-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .sheet-status {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .sheet-msg {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .sheet-msg.show { display: block; }
+  .sheet-msg.ok { background: var(--green-soft); color: #166534; border: 1px solid #bbf7d0; }
+  .sheet-msg.warn { background: var(--yellow-soft); color: #854d0e; border: 1px solid #fde047; }
+  .sheet-msg.err { background: var(--red-soft); color: #991b1b; border: 1px solid #fecaca; }
+  .mant-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .mant-toolbar input[type="search"],
+  .mant-toolbar select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    min-width: 160px;
+    background: #fff;
+  }
+  .mant-toolbar input[type="search"] { flex: 1; min-width: 200px; }
+  .mant-toolbar .btn-ghost {
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .mant-toolbar .btn-ghost:hover { background: var(--panel-2); }
+  .mant-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .mant-table-wrap table { font-size: 12px; margin: 0; }
+  .mant-table-wrap thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .config-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+    margin-top: 12px;
+  }
+  .config-row label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    flex: 1;
+    min-width: 240px;
+  }
+  .config-row input[type="url"] {
+    padding: 9px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    width: 100%;
+  }
+  .config-row button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    height: fit-content;
+  }
+  .mant-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px 16px;
+    margin-top: 8px;
+  }
+  .mant-form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .mant-form-grid input,
+  .mant-form-grid select {
+    padding: 8px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .mant-form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .mant-form-actions button[type="submit"] {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .mant-form-actions button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+  .mant-form-actions .hint-inline { font-size: 12px; color: var(--soft); }
+  @media (max-width: 768px) {
+    .app-shell { flex-direction: column; }
+    .sidebar {
+      width: 100%;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 12px 16px;
+    }
+    .sidebar-nav { flex-direction: row; flex-wrap: wrap; flex: 1; }
+    .nav-item { width: auto; }
+    .main { padding: 20px 16px; }
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    margin: 0 0 4px 0;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.6px;
+  }
+  header .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-btn {
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    padding: 7px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { background: var(--panel-2); }
+  .filter-btn.active {
+    background: var(--text);
+    color: #fff;
+    border-color: var(--text);
+  }
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .kpi {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .kpi .label {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .kpi .value {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .kpi .sub {
+    font-size: 11px;
+    color: var(--soft);
+    margin-top: 4px;
+  }
+  .kpi.green .value { color: var(--green); }
+  .kpi.yellow .value { color: var(--yellow); }
+  .kpi.red .value { color: var(--red); }
+  .kpi.blue .value { color: var(--blue); }
+  .kpi.purple .value { color: var(--purple); }
+  .kpi.orange .value { color: var(--orange); }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .card h2 {
+    margin: 0 0 16px 0;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    color: var(--text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card h2 .meta { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .chart-wrap { position: relative; height: 280px; }
+  .chart-wrap.tall { height: 360px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  thead th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+  }
+  tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr:hover { background: var(--panel-2); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .group-header td {
+    background: var(--panel-2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 12px;
+    border-top: 1px solid var(--border-strong);
+    border-bottom: 1px solid var(--border);
+  }
+  .group-subtotal td {
+    background: #fff;
+    font-weight: 600;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-strong);
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .badge.ganado, .badge.firma { background: var(--green-soft); color: var(--green); }
+  .badge.negociacion { background: var(--blue-soft); color: var(--blue); }
+  .badge.propuesta { background: var(--yellow-soft); color: var(--yellow); }
+  .badge.demo { background: var(--purple-soft); color: var(--purple); }
+  .badge.perdido { background: var(--red-soft); color: var(--red); }
+  .badge.empresa-novit { background: var(--blue-soft); color: var(--blue); }
+  .badge.empresa-sharky { background: var(--orange-soft); color: var(--orange); }
+  footer {
+    margin-top: 32px;
+    color: var(--soft);
+    font-size: 11px;
+    text-align: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  /* Recommendations */
+  .reco-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+  }
+  .reco {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .reco.priority-high { border-left-color: var(--red); }
+  .reco.priority-med { border-left-color: var(--yellow); }
+  .reco.priority-low { border-left-color: var(--green); }
+  .reco-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .reco.priority-high .reco-tag { background: var(--red-soft); color: var(--red); }
+  .reco.priority-med .reco-tag { background: var(--yellow-soft); color: var(--yellow); }
+  .reco.priority-low .reco-tag { background: var(--green-soft); color: var(--green); }
+  .reco h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+  }
+  .reco p {
+    margin: 0 0 8px 0;
+    font-size: 12.5px;
+    color: var(--text);
+  }
+  .reco .data {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--panel-2);
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-top: 8px;
+  }
+  .reco ul { margin: 6px 0 0 0; padding-left: 18px; font-size: 12px; color: var(--text); }
+  .reco ul li { margin-bottom: 3px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Menú principal">
+    <div class="sidebar-brand">NOVIT · SHARKY</div>
+    <nav class="sidebar-nav">
+      <button type="button" class="nav-item active" data-view="dashboard" id="navDashboard">Dashboard de Ventas</button>
+      <button type="button" class="nav-item" data-view="mantenimiento" id="navMantenimiento">Mantenimiento CRM</button>
+    </nav>
+  </aside>
+  <div class="main">
+  <header>
+    <div>
+      <h1 id="mainTitle">Dashboard de Ventas</h1>
+      <div class="subtitle" id="mainSubtitle">Pipeline NOVIT / SHARKY · Resumen comercial · 2026</div>
+    </div>
+    <div class="filters" id="empresaFilter">
+      <button class="filter-btn active" data-emp="ALL">Todas</button>
+      <button class="filter-btn" data-emp="NOVIT">NOVIT</button>
+      <button class="filter-btn" data-emp="SHARKY">SHARKY</button>
+    </div>
+  </header>
+
+  <div id="viewDashboard" class="view">
+  <section class="kpi-grid" id="kpis"></section>
+
+  <section class="grid-2">
+    <div class="card">
+      <h2>Pipeline por Estado <span class="meta">setup + 12m</span></h2>
+      <div class="chart-wrap"><canvas id="estadoChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Distribución por Empresa <span class="meta">valor 12 meses</span></h2>
+      <div class="chart-wrap"><canvas id="empresaChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="card">
+      <h2>Top Clientes <span class="meta">por valor 12 meses</span></h2>
+      <div class="chart-wrap tall"><canvas id="clientesChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Proyección de Ingresos <span class="meta">setup + recurrente</span></h2>
+      <div class="chart-wrap tall"><canvas id="proyeccionChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom: 24px;">
+    <h2>Embudo Comercial <span class="meta">cantidad y valor por etapa</span></h2>
+    <div class="chart-wrap"><canvas id="funnelChart"></canvas></div>
+  </section>
+
+  <section class="card" style="margin-bottom: 24px;">
+    <h2>Detalle del Pipeline <span class="meta" id="rowCount"></span></h2>
+    <div style="overflow-x: auto;">
+      <table id="dealsTable">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Proyecto</th>
+            <th>Empresa</th>
+            <th class="num">Setup</th>
+            <th class="num">Mensualidad</th>
+            <th class="num">12 meses</th>
+            <th class="num">24 meses</th>
+            <th class="num">36 meses</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr style="font-weight: 700; background: var(--text); color: #fff;">
+            <td colspan="3" style="padding: 12px;">TOTAL GENERAL</td>
+            <td class="num" id="totSetup"></td>
+            <td class="num" id="totMens"></td>
+            <td class="num" id="tot12"></td>
+            <td class="num" id="tot24"></td>
+            <td class="num" id="tot36"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Recomendaciones a Seguir <span class="meta">acciones priorizadas</span></h2>
+    <div class="reco-grid" id="recoGrid"></div>
+  </section>
+  </div>
+
+  <div id="viewMantenimiento" class="view hidden">
+    <div id="sheetBanner" class="sheet-msg" role="status"></div>
+
+    <section class="card" style="margin-bottom: 24px;">
+      <h2>Hoja de cálculo del CRM <span class="meta">Google Sheets</span></h2>
+      <p class="mantenimiento-intro" style="margin-bottom: 0;">
+        La hoja es la fuente de datos: sincroniza para actualizar el dashboard y el listado. Para <strong>crear filas desde aquí</strong> necesitas desplegar el script de Apps Script (ver carpeta <code>google-apps-script</code> en el proyecto) y pegar la URL abajo. La hoja debe estar compartida como mínimo para lectura con quien use el dashboard.
+      </p>
+      <div class="sheet-cta-row">
+        <a class="sheet-cta" id="sheetEditLink" href="https://docs.google.com/spreadsheets/d/1h8Z4pg3axi_VJVWiXAvK22ORSqy86xO_nqOGAR_zAW4/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer">Abrir hoja en Google Sheets</a>
+      </div>
+      <div class="sheet-toolbar">
+        <button type="button" id="btnSyncSheet">Sincronizar desde hoja</button>
+        <span class="sheet-status" id="sheetSyncStatus"></span>
+      </div>
+    </section>
+
+    <section class="card" style="margin-bottom: 24px;">
+      <h2>URL de Apps Script (altas) <span class="meta">una sola vez</span></h2>
+      <p class="mantenimiento-intro" style="margin-bottom: 0;">
+        Tras publicar el script como aplicación web (cualquiera puede ejecutar), pega aquí la URL que termina en <code>/exec</code>. Se guarda solo en este navegador.
+      </p>
+      <div class="config-row">
+        <label>URL del despliegue web
+          <input type="url" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+        </label>
+        <button type="button" id="btnSaveAppsUrl">Guardar</button>
+      </div>
+    </section>
+
+    <section class="card" style="margin-bottom: 24px;">
+      <h2>Pipeline · búsqueda y filtros <span class="meta">mismos datos que el dashboard</span></h2>
+      <div class="mant-toolbar">
+        <input type="search" id="mantSearch" placeholder="Buscar en cliente o proyecto…" autocomplete="off">
+        <select id="mantFilterEstado" aria-label="Filtrar por estado">
+          <option value="">Todos los estados</option>
+        </select>
+        <select id="mantFilterEmpresa" aria-label="Filtrar por empresa">
+          <option value="">Todas las empresas</option>
+          <option value="NOVIT">NOVIT</option>
+          <option value="SHARKY">SHARKY</option>
+        </select>
+        <button type="button" class="btn-ghost" id="mantClearFilters">Limpiar filtros</button>
+      </div>
+      <div class="mant-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Proyecto</th>
+              <th>Empresa</th>
+              <th>Estado</th>
+              <th class="num">Setup</th>
+              <th class="num">Mensual</th>
+              <th class="num">12m</th>
+              <th class="num">24m</th>
+              <th class="num">36m</th>
+            </tr>
+          </thead>
+          <tbody id="mantRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" style="margin-bottom: 24px;">
+      <h2>Nueva oportunidad <span class="meta">se agrega al final de la hoja</span></h2>
+      <form id="mantNewDeal">
+        <div class="mant-form-grid">
+          <label>Cliente *
+            <input name="cliente" required placeholder="Ej. ACME">
+          </label>
+          <label>Proyecto *
+            <input name="proyecto" required placeholder="Ej. Implementación HIS">
+          </label>
+          <label>Empresa *
+            <select name="empresa" required>
+              <option value="NOVIT">NOVIT</option>
+              <option value="SHARKY">SHARKY</option>
+            </select>
+          </label>
+          <label>Estado *
+            <select name="estado" id="mantFormEstado" required></select>
+          </label>
+          <label>Setup (USD)
+            <input name="setup" type="number" min="0" step="1" value="0">
+          </label>
+          <label>Mensualidad (USD)
+            <input name="mensualidad" type="number" min="0" step="1" value="0">
+          </label>
+          <label>12 meses (USD)
+            <input name="m12" type="number" min="0" step="1" placeholder="vacío = mensualidad × 12">
+          </label>
+          <label>24 meses (USD)
+            <input name="m24" type="number" min="0" step="1" placeholder="opcional">
+          </label>
+          <label>36 meses (USD)
+            <input name="m36" type="number" min="0" step="1" placeholder="opcional">
+          </label>
+          <div class="mant-form-actions">
+            <button type="submit" id="btnSubmitDeal">Agregar a Google Sheet</button>
+            <span class="hint-inline" id="mantSubmitHint">Requiere URL de Apps Script guardada.</span>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <p class="mantenimiento-intro">
+      Tareas de gobierno de datos y calidad del pipeline. El diagnóstico usa los registros cargados (hoja o respaldo local); las casillas se guardan en este navegador.
+    </p>
+
+    <section class="diag-grid" id="diagGrid" aria-live="polite"></section>
+
+    <section class="card" style="margin-bottom: 24px;">
+      <h2>Lista cerrada de estados y campos <span class="meta">definición CRM</span></h2>
+      <ul class="checklist" id="checklistDef"></ul>
+    </section>
+
+    <section class="card" style="margin-bottom: 24px;">
+      <h2>Higiene de registros <span class="meta">revisión periódica</span></h2>
+      <ul class="checklist" id="checklistHigiene"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Exportación y respaldo <span class="meta">continuidad</span></h2>
+      <ul class="checklist" id="checklistBackup"></ul>
+    </section>
+  </div>
+
+  <footer id="footerSource">Fuente: datos locales de respaldo · Sincroniza con la hoja en Mantenimiento CRM</footer>
+  </div>
+</div>
+
+<script>
+const SHEET_CONFIG = {
+  id: "1h8Z4pg3axi_VJVWiXAvK22ORSqy86xO_nqOGAR_zAW4",
+  gid: 0,
+};
+const LS_APPS_SCRIPT_URL = "novit_crm_apps_script_url";
+
+const DEALS_EMBEDDED = [
+  { cliente: "Grandia", estado: "Ganado", proyecto: "SMIFAST SCTR", empresa: "NOVIT", setup: 19800, mensualidad: 2700, m12: 32400, m24: 64800, m36: 97200 },
+  { cliente: "SANNA", estado: "Firma del Contrato", proyecto: "IAFAS ODOO 19", empresa: "NOVIT", setup: 85500, mensualidad: 3700, m12: 44400, m24: 88800, m36: 133200 },
+  { cliente: "La Positiva", estado: "Firma del Contrato", proyecto: "SHARKi HIS", empresa: "SHARKY", setup: 87000, mensualidad: 3200, m12: 38400, m24: 76800, m36: 115200 },
+  { cliente: "Clínica Peruano Americana", estado: "Ganado", proyecto: "Anteproyecto", empresa: "NOVIT", setup: 6500, mensualidad: 0, m12: 0, m24: 0, m36: 0 },
+  { cliente: "Clínica Peruano Americana", estado: "Negociación", proyecto: "SHARKI HIS", empresa: "NOVIT", setup: 60000, mensualidad: 4900, m12: 58800, m24: 117600, m36: 176400 },
+  { cliente: "Wisar Salud", estado: "Negociación", proyecto: "SHARKI HIS", empresa: "SHARKY", setup: 32000, mensualidad: 1650, m12: 19800, m24: 39600, m36: 59400 },
+  { cliente: "Oftálmica", estado: "Propuesta", proyecto: "SHARKI HIS", empresa: "SHARKY", setup: 31000, mensualidad: 2750, m12: 33000, m24: 66000, m36: 99000 },
+  { cliente: "Stella Maris", estado: "Propuesta", proyecto: "SHARKI HIS", empresa: "SHARKY", setup: 89500, mensualidad: 1233, m12: 14796, m24: 29592, m36: 44388 },
+  { cliente: "Mapfre", estado: "Propuesta", proyecto: "Web Suscripciones", empresa: "NOVIT", setup: 12794, mensualidad: 12794, m12: 140735, m24: 0, m36: 0 },
+  { cliente: "TRECCA", estado: "Perdido", proyecto: "TRECCA Etapa 1", empresa: "NOVIT", setup: 279706, mensualidad: 23309, m12: 256397, m24: 0, m36: 0 },
+  { cliente: "TRECCA", estado: "Perdido", proyecto: "TRECCA Etapa 2", empresa: "NOVIT", setup: 847000, mensualidad: 70583, m12: 776417, m24: 0, m36: 0 },
+  { cliente: "UV3", estado: "Ganado", proyecto: "Farmacia UV3 Farma", empresa: "SHARKY", setup: 700, mensualidad: 300, m12: 3600, m24: 7200, m36: 10800 },
+  { cliente: "Mapfre", estado: "Propuesta", proyecto: "Oracle Forms", empresa: "NOVIT", setup: 35824, mensualidad: 35824, m12: 394059, m24: 0, m36: 0 },
+  { cliente: "Mapfre", estado: "Propuesta", proyecto: "Migración Aplicaciones Angular", empresa: "NOVIT", setup: 35824, mensualidad: 35824, m12: 394059, m24: 0, m36: 0 },
+  { cliente: "RED SALVA", estado: "Propuesta", proyecto: "SITEDS TEDEF CONVENIOS", empresa: "SHARKY", setup: 2000, mensualidad: 0, m12: 0, m24: 0, m36: 0 },
+  { cliente: "RED SALVA", estado: "Ganado", proyecto: "FISIOTERAPIA", empresa: "SHARKY", setup: 700, mensualidad: 100, m12: 1200, m24: 2400, m36: 3600 },
+  { cliente: "SOLIDARIDAD", estado: "Demo", proyecto: "HIS Centro Médico", empresa: "SHARKY", setup: 3000, mensualidad: 1000, m12: 12000, m24: 24000, m36: 36000 },
+  { cliente: "Mapfre", estado: "Ganado", proyecto: "OutSourcing Yennifer Lara", empresa: "NOVIT", setup: 0, mensualidad: 3529, m12: 38824, m24: 0, m36: 0 },
+];
+
+let DEALS = DEALS_EMBEDDED.map(d => ({ ...d }));
+
+const fmt = n => "US$" + Math.round(n).toLocaleString("en-US");
+const fmtShort = n => {
+  if (n >= 1_000_000) return "US$" + (n/1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return "US$" + (n/1_000).toFixed(0) + "k";
+  return "US$" + Math.round(n);
+};
+
+const ESTADO_COLORS = {
+  "Ganado": "#16a34a",
+  "Firma del Contrato": "#10b981",
+  "Negociación": "#2563eb",
+  "Propuesta": "#ca8a04",
+  "Demo": "#7c3aed",
+  "Perdido": "#dc2626",
+};
+const ESTADO_ORDER = ["Ganado", "Firma del Contrato", "Negociación", "Propuesta", "Demo", "Perdido"];
+
+let activeEmpresa = "ALL";
+let charts = {};
+
+function showSheetBanner(kind, text) {
+  const el = document.getElementById("sheetBanner");
+  if (!text) {
+    el.className = "sheet-msg";
+    el.textContent = "";
+    return;
+  }
+  el.className = "sheet-msg show " + (kind === "ok" ? "ok" : kind === "warn" ? "warn" : "err");
+  el.textContent = text;
+}
+
+function normHeader(h) {
+  return String(h || "")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseGvizText(text) {
+  const m = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)\s*;?\s*$/);
+  if (!m) throw new Error("Respuesta de Google no reconocida. ¿La hoja está compartida para lectura?");
+  return JSON.parse(m[1]);
+}
+
+function resolveColIndices(headers) {
+  const H = headers.map(normHeader);
+  const find = (...alts) => {
+    for (let i = 0; i < H.length; i++) {
+      for (const a of alts) {
+        const n = normHeader(a);
+        if (H[i] === n || H[i].includes(n)) return i;
+      }
+    }
+    return -1;
+  };
+  return {
+    cliente: find("cliente", "customer"),
+    estado: find("estado", "etapa", "stage"),
+    proyecto: find("proyecto", "producto", "servicio", "deal"),
+    empresa: find("empresa", "compañia", "compania"),
+    setup: find("setup", "fee setup"),
+    mensualidad: find("mensualidad", "mensual", "mrr", "recurrente"),
+    m12: find("m12", "12 meses", "12m", "arr 12"),
+    m24: find("m24", "24 meses", "24m"),
+    m36: find("m36", "36 meses", "36m"),
+  };
+}
+
+function gvizCell(row, i) {
+  if (i < 0 || !row || !row.c || !row.c[i]) return "";
+  const v = row.c[i].v;
+  if (v == null) return "";
+  if (typeof v === "number" && row.c[i].f != null) return row.c[i].f;
+  return String(v).trim();
+}
+
+function parseMoney(val) {
+  if (val === "" || val == null) return 0;
+  if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+  const n = Number(String(val).replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function isHeaderLikeRow(deal) {
+  const c = normHeader(deal.cliente);
+  const e = normHeader(deal.estado);
+  return (c === "cliente" && e === "estado") || c === "customer";
+}
+
+function rowsFromGviz(table) {
+  const headers = table.cols.map(c => c.label || "");
+  const idx = resolveColIndices(headers);
+  if (idx.cliente < 0 || idx.estado < 0) {
+    throw new Error("En la primera fila de la hoja faltan columnas reconocibles (Cliente, Estado, …).");
+  }
+  const out = [];
+  const rows = table.rows || [];
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    const cliente = gvizCell(row, idx.cliente);
+    const estado = gvizCell(row, idx.estado);
+    const proyecto = gvizCell(row, idx.proyecto);
+    const empresa = gvizCell(row, idx.empresa);
+    const setup = parseMoney(gvizCell(row, idx.setup));
+    const mensualidad = parseMoney(gvizCell(row, idx.mensualidad));
+    let m12 = parseMoney(gvizCell(row, idx.m12));
+    let m24 = parseMoney(gvizCell(row, idx.m24));
+    let m36 = parseMoney(gvizCell(row, idx.m36));
+    if (!cliente && !estado && !proyecto) continue;
+    const deal = {
+      cliente,
+      estado: estado || "Propuesta",
+      proyecto: proyecto || "—",
+      empresa: (empresa || "NOVIT").toUpperCase() === "SHARKY" ? "SHARKY" : "NOVIT",
+      setup,
+      mensualidad,
+      m12: m12 || (mensualidad ? Math.round(mensualidad * 12) : 0),
+      m24: m24 || (mensualidad ? Math.round(mensualidad * 24) : 0),
+      m36: m36 || (mensualidad ? Math.round(mensualidad * 36) : 0),
+    };
+    if (isHeaderLikeRow(deal)) continue;
+    out.push(deal);
+  }
+  if (out.length === 0) throw new Error("No hay filas de datos en la hoja (además del encabezado).");
+  return out;
+}
+
+async function fetchDealsFromGviz() {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.id}/gviz/tq?tqx=out:json&gid=${SHEET_CONFIG.gid}&_ts=${Date.now()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("No se pudo leer la hoja (" + res.status + ").");
+  const text = await res.text();
+  const parsed = parseGvizText(text);
+  if (parsed.status === "error") throw new Error(parsed.errors?.[0]?.detailed_message || "Error en consulta a la hoja.");
+  return rowsFromGviz(parsed.table);
+}
+
+async function syncFromSheet(silent) {
+  const btn = document.getElementById("btnSyncSheet");
+  const st = document.getElementById("sheetSyncStatus");
+  if (btn) btn.disabled = true;
+  if (st) st.textContent = "Sincronizando…";
+  showSheetBanner("", "");
+  try {
+    const rows = await fetchDealsFromGviz();
+    DEALS = rows;
+    const foot = document.getElementById("footerSource");
+    if (foot) foot.textContent = "Fuente: Google Sheet · " + rows.length + " oportunidades · gid=" + SHEET_CONFIG.gid;
+    if (st) st.textContent = "Listo · " + rows.length + " registros desde la hoja.";
+    showSheetBanner("ok", "Datos cargados desde Google Sheets. El dashboard y esta vista usan la misma base.");
+    renderAll();
+    renderMantTable();
+    renderDiagMantenimiento();
+  } catch (e) {
+    if (st) st.textContent = "";
+    const msg = e && e.message ? e.message : String(e);
+    if (!silent) showSheetBanner("err", msg);
+    else showSheetBanner("warn", "No se pudo leer la hoja al iniciar; se muestran datos de respaldo. " + msg);
+    throw e;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function getMantFiltered() {
+  const q = (document.getElementById("mantSearch")?.value || "").trim().toLowerCase();
+  const fe = document.getElementById("mantFilterEstado")?.value || "";
+  const femp = document.getElementById("mantFilterEmpresa")?.value || "";
+  return DEALS.filter(d => {
+    if (fe && d.estado !== fe) return false;
+    if (femp && d.empresa.toUpperCase() !== femp) return false;
+    if (q) {
+      const blob = (d.cliente + " " + d.proyecto + " " + d.estado).toLowerCase();
+      if (!blob.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function renderMantTable() {
+  const tbody = document.getElementById("mantRows");
+  if (!tbody) return;
+  const rows = getMantFiltered();
+  tbody.innerHTML = rows.map(d => `
+    <tr>
+      <td>${escapeHtml(d.cliente)}</td>
+      <td>${escapeHtml(d.proyecto)}</td>
+      <td><span class="badge empresa-${d.empresa.toLowerCase()}">${escapeHtml(d.empresa)}</span></td>
+      <td>${escapeHtml(d.estado)}</td>
+      <td class="num">${d.setup ? fmt(d.setup) : "—"}</td>
+      <td class="num">${d.mensualidad ? fmt(d.mensualidad) : "—"}</td>
+      <td class="num">${d.m12 ? fmt(d.m12) : "—"}</td>
+      <td class="num">${d.m24 ? fmt(d.m24) : "—"}</td>
+      <td class="num">${d.m36 ? fmt(d.m36) : "—"}</td>
+    </tr>
+  `).join("");
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function looksLikeAppsScriptExec(url) {
+  return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:\?.*)?$/i.test(url);
+}
+
+function updateSubmitHint() {
+  const hint = document.getElementById("mantSubmitHint");
+  if (!hint) return;
+  const savedUrl = (localStorage.getItem(LS_APPS_SCRIPT_URL) || "").trim();
+  hint.textContent = savedUrl
+    ? "URL de Apps Script configurada."
+    : "Requiere URL de Apps Script guardada.";
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function sameDeal(a, b) {
+  return (
+    String(a.cliente || "").trim().toLowerCase() === String(b.cliente || "").trim().toLowerCase() &&
+    String(a.proyecto || "").trim().toLowerCase() === String(b.proyecto || "").trim().toLowerCase() &&
+    String(a.estado || "").trim().toLowerCase() === String(b.estado || "").trim().toLowerCase() &&
+    String(a.empresa || "").trim().toUpperCase() === String(b.empresa || "").trim().toUpperCase() &&
+    Number(a.setup || 0) === Number(b.setup || 0) &&
+    Number(a.mensualidad || 0) === Number(b.mensualidad || 0) &&
+    Number(a.m12 || 0) === Number(b.m12 || 0) &&
+    Number(a.m24 || 0) === Number(b.m24 || 0) &&
+    Number(a.m36 || 0) === Number(b.m36 || 0)
+  );
+}
+
+function countDealMatches(target) {
+  return DEALS.reduce((acc, d) => acc + (sameDeal(d, target) ? 1 : 0), 0);
+}
+
+function wireMantenimientoUI() {
+  const selEst = document.getElementById("mantFilterEstado");
+  if (selEst && selEst.options.length <= 1) {
+    selEst.innerHTML = '<option value="">Todos los estados</option>' +
+      ESTADO_ORDER.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join("");
+  }
+  const formEst = document.getElementById("mantFormEstado");
+  if (formEst && formEst.options.length === 0) {
+    formEst.innerHTML = ESTADO_ORDER.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join("");
+  }
+
+  const savedUrl = localStorage.getItem(LS_APPS_SCRIPT_URL) || "";
+  const urlInput = document.getElementById("appsScriptUrl");
+  if (urlInput) urlInput.value = savedUrl;
+  updateSubmitHint();
+
+  document.getElementById("btnSaveAppsUrl")?.addEventListener("click", () => {
+    const v = (urlInput?.value || "").trim();
+    if (!v) {
+      localStorage.removeItem(LS_APPS_SCRIPT_URL);
+      showSheetBanner("warn", "URL de Apps Script borrada.");
+      updateSubmitHint();
+    } else {
+      if (!looksLikeAppsScriptExec(v)) {
+        showSheetBanner("err", "La URL no parece un despliegue válido de Apps Script (/exec).");
+        return;
+      }
+      localStorage.setItem(LS_APPS_SCRIPT_URL, v);
+      showSheetBanner("ok", "URL guardada en este navegador.");
+      updateSubmitHint();
+    }
+  });
+
+  document.getElementById("btnSyncSheet")?.addEventListener("click", () => {
+    syncFromSheet(false).catch(() => {});
+  });
+
+  ["mantSearch", "mantFilterEstado", "mantFilterEmpresa"].forEach(id => {
+    document.getElementById(id)?.addEventListener("input", renderMantTable);
+    document.getElementById(id)?.addEventListener("change", renderMantTable);
+  });
+  document.getElementById("mantClearFilters")?.addEventListener("click", () => {
+    const ms = document.getElementById("mantSearch");
+    if (ms) ms.value = "";
+    const me = document.getElementById("mantFilterEstado");
+    if (me) me.value = "";
+    const mp = document.getElementById("mantFilterEmpresa");
+    if (mp) mp.value = "";
+    renderMantTable();
+  });
+
+  document.getElementById("mantNewDeal")?.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const form = ev.target;
+    const fd = new FormData(form);
+    const mensualidad = Number(fd.get("mensualidad")) || 0;
+    let m12 = fd.get("m12");
+    m12 = m12 === "" || m12 == null ? Math.round(mensualidad * 12) : Number(m12) || 0;
+    let m24 = fd.get("m24");
+    m24 = m24 === "" || m24 == null ? Math.round(mensualidad * 24) : Number(m24) || 0;
+    let m36 = fd.get("m36");
+    m36 = m36 === "" || m36 == null ? Math.round(mensualidad * 36) : Number(m36) || 0;
+    const deal = {
+      cliente: String(fd.get("cliente") || "").trim(),
+      proyecto: String(fd.get("proyecto") || "").trim(),
+      empresa: String(fd.get("empresa") || "NOVIT").toUpperCase(),
+      estado: String(fd.get("estado") || "Propuesta"),
+      setup: Number(fd.get("setup")) || 0,
+      mensualidad,
+      m12,
+      m24,
+      m36,
+    };
+    const baseUrl = localStorage.getItem(LS_APPS_SCRIPT_URL) || "";
+    if (!baseUrl) {
+      showSheetBanner("err", "Guarda primero la URL de Apps Script (despliegue web /exec).");
+      return;
+    }
+    if (!looksLikeAppsScriptExec(baseUrl)) {
+      showSheetBanner("err", "La URL guardada no es válida. Debe terminar en /exec.");
+      return;
+    }
+    const btn = document.getElementById("btnSubmitDeal");
+    if (btn) btn.disabled = true;
+    try {
+      const beforeCount = countDealMatches(deal);
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify(deal))));
+      const u = baseUrl.replace(/\/?$/, "") + "?action=append&payload=" + encodeURIComponent(payload);
+      // Apps Script suele bloquear CORS en fetch normal. no-cors envía la petición igual.
+      await fetch(u, { method: "GET", mode: "no-cors", cache: "no-store" });
+      let confirmed = false;
+      let lastErr = "";
+      for (let i = 0; i < 4; i++) {
+        await sleep(900 + i * 500);
+        try {
+          await syncFromSheet(true);
+          if (countDealMatches(deal) > beforeCount) {
+            confirmed = true;
+            break;
+          }
+        } catch (e) {
+          lastErr = (e && e.message) || String(e);
+        }
+      }
+
+      if (confirmed) {
+        showSheetBanner("ok", "Fila grabada en Google Sheet y confirmada en la sincronización.");
+        form.reset();
+      } else {
+        showSheetBanner(
+          "warn",
+          "Se envió la solicitud pero no pude confirmar la nueva fila aún. Revisa permisos del Apps Script y la hoja. " +
+          (lastErr ? "Detalle: " + lastErr : "")
+        );
+      }
+    } catch (e) {
+      showSheetBanner("err", (e && e.message) || String(e));
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+}
+
+async function tryInitialSheetLoad() {
+  try {
+    await syncFromSheet(true);
+  } catch (_) {
+    /* ya mostró banner warn */
+  }
+}
+
+function getFiltered() {
+  if (activeEmpresa === "ALL") return DEALS;
+  return DEALS.filter(d => d.empresa.toUpperCase() === activeEmpresa);
+}
+
+function renderKPIs() {
+  const data = getFiltered();
+  const ganados = data.filter(d => ["Ganado","Firma del Contrato"].includes(d.estado));
+  const activos = data.filter(d => !["Perdido"].includes(d.estado));
+  const perdidos = data.filter(d => d.estado === "Perdido");
+  const propuestas = data.filter(d => ["Propuesta","Negociación","Demo"].includes(d.estado));
+
+  const setupGanado = ganados.reduce((a,d) => a + d.setup, 0);
+  const arrGanado = ganados.reduce((a,d) => a + d.m12, 0);
+  const pipelineActivo = activos.reduce((a,d) => a + d.setup + d.m12, 0);
+  const pipelinePropuesta = propuestas.reduce((a,d) => a + d.setup + d.m12, 0);
+  const ltv36Ganado = ganados.reduce((a,d) => a + d.setup + d.m36, 0);
+
+  const winRate = (ganados.length + perdidos.length > 0)
+    ? (ganados.length / (ganados.length + perdidos.length) * 100)
+    : 0;
+
+  const kpis = [
+    { label: "Pipeline Activo", value: fmtShort(pipelineActivo), sub: `${activos.length} oportunidades`, cls: "blue" },
+    { label: "Ganado / Firmado", value: fmtShort(setupGanado + arrGanado), sub: `${ganados.length} deals · setup + 12m`, cls: "green" },
+    { label: "ARR Ganado (12m)", value: fmtShort(arrGanado), sub: "ingreso recurrente anual", cls: "green" },
+    { label: "LTV 36m Ganado", value: fmtShort(ltv36Ganado), sub: "valor de vida del cliente", cls: "purple" },
+    { label: "En Propuesta/Negoc.", value: fmtShort(pipelinePropuesta), sub: `${propuestas.length} oportunidades`, cls: "yellow" },
+    { label: "Perdido", value: fmtShort(perdidos.reduce((a,d)=>a+d.setup+d.m12,0)), sub: `${perdidos.length} deals`, cls: "red" },
+    { label: "Tasa de Cierre", value: winRate.toFixed(0) + "%", sub: "ganados vs decididos", cls: "orange" },
+    { label: "Total Oportunidades", value: data.length, sub: "en el pipeline", cls: "blue" },
+  ];
+
+  document.getElementById("kpis").innerHTML = kpis.map(k => `
+    <div class="kpi ${k.cls}">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+      <div class="sub">${k.sub}</div>
+    </div>
+  `).join("");
+}
+
+function renderEstadoChart() {
+  const data = getFiltered();
+  const grouped = {};
+  data.forEach(d => {
+    grouped[d.estado] = (grouped[d.estado] || 0) + d.setup + d.m12;
+  });
+  const labels = ESTADO_ORDER.filter(e => grouped[e] !== undefined);
+  const values = labels.map(l => grouped[l]);
+  const colors = labels.map(l => ESTADO_COLORS[l]);
+
+  if (charts.estado) charts.estado.destroy();
+  charts.estado = new Chart(document.getElementById("estadoChart"), {
+    type: "doughnut",
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: "#fff", borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom", labels: { color: "#0f172a", font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmt(ctx.raw)}` } },
+      },
+    },
+  });
+}
+
+function renderEmpresaChart() {
+  const data = getFiltered();
+  const grouped = {};
+  data.forEach(d => {
+    const e = d.empresa.toUpperCase();
+    if (!grouped[e]) grouped[e] = { setup: 0, m12: 0 };
+    grouped[e].setup += d.setup;
+    grouped[e].m12 += d.m12;
+  });
+  const labels = Object.keys(grouped);
+
+  if (charts.empresa) charts.empresa.destroy();
+  charts.empresa = new Chart(document.getElementById("empresaChart"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Setup", data: labels.map(l => grouped[l].setup), backgroundColor: "#0ea5e9" },
+        { label: "12 meses", data: labels.map(l => grouped[l].m12), backgroundColor: "#ea580c" },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: "#64748b" }, grid: { display: false }, stacked: true },
+        y: { ticks: { color: "#64748b", callback: v => fmtShort(v) }, grid: { color: "#e2e8f0" }, stacked: true },
+      },
+      plugins: {
+        legend: { position: "bottom", labels: { color: "#0f172a", font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` } },
+      },
+    },
+  });
+}
+
+function renderClientesChart() {
+  const data = getFiltered().filter(d => d.estado !== "Perdido");
+  const grouped = {};
+  data.forEach(d => {
+    grouped[d.cliente] = (grouped[d.cliente] || 0) + d.m12 + d.setup;
+  });
+  const sorted = Object.entries(grouped).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  const labels = sorted.map(s => s[0]);
+  const values = sorted.map(s => s[1]);
+
+  if (charts.clientes) charts.clientes.destroy();
+  charts.clientes = new Chart(document.getElementById("clientesChart"), {
+    type: "bar",
+    data: { labels, datasets: [{ label: "Setup + 12m", data: values, backgroundColor: "#7c3aed" }] },
+    options: {
+      indexAxis: "y",
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: "#64748b", callback: v => fmtShort(v) }, grid: { color: "#e2e8f0" } },
+        y: { ticks: { color: "#0f172a", font: { size: 11 } }, grid: { display: false } },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => fmt(ctx.raw) } },
+      },
+    },
+  });
+}
+
+function renderProyeccionChart() {
+  const data = getFiltered().filter(d => ["Ganado","Firma del Contrato"].includes(d.estado));
+  const setup = data.reduce((a,d) => a + d.setup, 0);
+  const m12 = data.reduce((a,d) => a + d.m12, 0);
+  const m24 = data.reduce((a,d) => a + d.m24, 0);
+  const m36 = data.reduce((a,d) => a + d.m36, 0);
+
+  if (charts.proyeccion) charts.proyeccion.destroy();
+  charts.proyeccion = new Chart(document.getElementById("proyeccionChart"), {
+    type: "bar",
+    data: {
+      labels: ["Setup", "12 meses", "24 meses", "36 meses"],
+      datasets: [{
+        label: "Ingresos proyectados",
+        data: [setup, setup + m12, setup + m24, setup + m36],
+        backgroundColor: ["#0ea5e9","#22c55e","#10b981","#059669"],
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: "#64748b" }, grid: { display: false } },
+        y: { ticks: { color: "#64748b", callback: v => fmtShort(v) }, grid: { color: "#e2e8f0" } },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => fmt(ctx.raw) } },
+      },
+    },
+  });
+}
+
+function renderFunnelChart() {
+  const data = getFiltered().filter(d => d.estado !== "Perdido");
+  const orderFunnel = ["Demo", "Propuesta", "Negociación", "Firma del Contrato", "Ganado"];
+  const counts = orderFunnel.map(e => data.filter(d => d.estado === e).length);
+  const values = orderFunnel.map(e => data.filter(d => d.estado === e).reduce((a,d) => a + d.setup + d.m12, 0));
+
+  if (charts.funnel) charts.funnel.destroy();
+  charts.funnel = new Chart(document.getElementById("funnelChart"), {
+    type: "bar",
+    data: {
+      labels: orderFunnel,
+      datasets: [
+        { label: "# oportunidades", data: counts, backgroundColor: "#0ea5e9", yAxisID: "y" },
+        { label: "Valor (setup + 12m)", data: values, backgroundColor: "#7c3aed", yAxisID: "y1", type: "line", borderColor: "#7c3aed", tension: 0.3 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: "#0f172a" }, grid: { display: false } },
+        y: { position: "left", ticks: { color: "#0ea5e9", precision: 0 }, grid: { color: "#e2e8f0" }, title: { display: true, text: "Oportunidades", color: "#64748b" } },
+        y1: { position: "right", ticks: { color: "#7c3aed", callback: v => fmtShort(v) }, grid: { display: false }, title: { display: true, text: "Valor", color: "#64748b" } },
+      },
+      plugins: {
+        legend: { position: "bottom", labels: { color: "#0f172a", font: { size: 11 } } },
+      },
+    },
+  });
+}
+
+function renderTable() {
+  const data = getFiltered();
+  const tbody = document.querySelector("#dealsTable tbody");
+  const slug = s => s.toLowerCase().replace(/[^a-z]/g,"");
+
+  let html = "";
+  ESTADO_ORDER.forEach(estado => {
+    const rows = data.filter(d => d.estado === estado);
+    if (rows.length === 0) return;
+
+    const sumSetup = rows.reduce((a,d) => a + d.setup, 0);
+    const sumMens  = rows.reduce((a,d) => a + d.mensualidad, 0);
+    const sum12    = rows.reduce((a,d) => a + d.m12, 0);
+    const sum24    = rows.reduce((a,d) => a + d.m24, 0);
+    const sum36    = rows.reduce((a,d) => a + d.m36, 0);
+
+    html += `
+      <tr class="group-header">
+        <td colspan="8">
+          <span class="badge ${slug(estado)}">${estado}</span>
+          &nbsp;&nbsp;<span style="color: var(--soft); font-weight: 500;">${rows.length} ${rows.length === 1 ? "oportunidad" : "oportunidades"}</span>
+        </td>
+      </tr>
+    `;
+
+    rows.forEach(d => {
+      html += `
+        <tr>
+          <td>${d.cliente}</td>
+          <td>${d.proyecto}</td>
+          <td><span class="badge empresa-${d.empresa.toLowerCase()}">${d.empresa}</span></td>
+          <td class="num">${d.setup ? fmt(d.setup) : "—"}</td>
+          <td class="num">${d.mensualidad ? fmt(d.mensualidad) : "—"}</td>
+          <td class="num">${d.m12 ? fmt(d.m12) : "—"}</td>
+          <td class="num">${d.m24 ? fmt(d.m24) : "—"}</td>
+          <td class="num">${d.m36 ? fmt(d.m36) : "—"}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+      <tr class="group-subtotal">
+        <td colspan="3" style="text-align: right;">Subtotal ${estado}</td>
+        <td class="num">${fmt(sumSetup)}</td>
+        <td class="num">${fmt(sumMens)}</td>
+        <td class="num">${fmt(sum12)}</td>
+        <td class="num">${fmt(sum24)}</td>
+        <td class="num">${fmt(sum36)}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+
+  document.getElementById("rowCount").textContent = `${data.length} registros, agrupados por estado`;
+  document.getElementById("totSetup").textContent = fmt(data.reduce((a,d) => a + d.setup, 0));
+  document.getElementById("totMens").textContent = fmt(data.reduce((a,d) => a + d.mensualidad, 0));
+  document.getElementById("tot12").textContent = fmt(data.reduce((a,d) => a + d.m12, 0));
+  document.getElementById("tot24").textContent = fmt(data.reduce((a,d) => a + d.m24, 0));
+  document.getElementById("tot36").textContent = fmt(data.reduce((a,d) => a + d.m36, 0));
+}
+
+function renderRecomendaciones() {
+  const data = getFiltered();
+  const ganados = data.filter(d => ["Ganado","Firma del Contrato"].includes(d.estado));
+  const propuestas = data.filter(d => d.estado === "Propuesta");
+  const negociacion = data.filter(d => d.estado === "Negociación");
+  const demo = data.filter(d => d.estado === "Demo");
+
+  const mapfreProps = data.filter(d => d.cliente === "Mapfre" && d.estado === "Propuesta");
+  const mapfreValor = mapfreProps.reduce((a,d) => a + d.setup + d.m12, 0);
+
+  const negociacionValor = negociacion.reduce((a,d) => a + d.setup + d.m12, 0);
+
+  const recos = [
+    {
+      pri: "high",
+      tag: "Acción inmediata",
+      title: "Cerrar firmas pendientes (SANNA + La Positiva)",
+      text: "Hay dos contratos en estado 'Firma del Contrato' que suman <b>" + fmtShort(172500 + 82800) + "</b> de setup + 12m. Son los ingresos más cercanos y de mayor probabilidad.",
+      data: "SANNA: US$130k · La Positiva: US$125k · Total ARR: US$83k",
+      bullets: [
+        "Confirmar fecha exacta de firma esta semana.",
+        "Validar disponibilidad del equipo asignado para arranque inmediato.",
+        "Pasar a 'Ganado' apenas se reciba el documento firmado.",
+      ],
+    },
+    {
+      pri: "high",
+      tag: "Foco comercial",
+      title: "Atacar las 3 propuestas de Mapfre",
+      text: "Mapfre concentra <b>" + fmtShort(mapfreValor) + "</b> en propuesta (Web Suscripciones, Oracle Forms y Migración Angular). Es el cliente con mayor concentración del pipeline activo.",
+      data: mapfreProps.length + " propuestas Mapfre · " + fmtShort(mapfreValor) + " setup + 12m",
+      bullets: [
+        "Consolidar las 3 propuestas en una conversación única con un solo decisor.",
+        "Ofrecer paquete con descuento por bundle si se aprueban juntas.",
+        "Definir fecha de respuesta máxima — evitar pipeline estancado.",
+      ],
+    },
+    {
+      pri: "med",
+      tag: "Avanzar etapa",
+      title: "Mover Negociación a Firma",
+      text: "Clínica Peruano Americana (SHARKI HIS) y Wisar Salud están en negociación con un valor combinado de <b>" + fmtShort(negociacionValor) + "</b>. Ya pasaron el filtro inicial — el siguiente paso es contractual.",
+      data: negociacion.length + " deals · " + fmtShort(negociacionValor) + " setup + 12m",
+      bullets: [
+        "Enviar borrador de contrato y agendar revisión jurídica.",
+        "Identificar y resolver el último blocker (precio, alcance, plazo).",
+        "Asignar champion interno del cliente para acelerar firma.",
+      ],
+    },
+    {
+      pri: "med",
+      tag: "Análisis",
+      title: "Aprender de TRECCA (perdido US$1.1M)",
+      text: "TRECCA representa la mayor pérdida del pipeline (Etapa 1 + Etapa 2). Hacer post-mortem para evitar repetir el patrón en deals grandes similares.",
+      data: "TRECCA Etapa 1 + 2: US$1,126,706 setup + US$1,032,814 12m",
+      bullets: [
+        "Documentar razones de pérdida (precio, alcance, competencia, timing).",
+        "Validar criterios de calificación para deals > US$200k.",
+        "Revisar si hay oportunidad de reabrir en 6-12 meses.",
+      ],
+    },
+    {
+      pri: "med",
+      tag: "Conversión",
+      title: "Convertir Demo en Propuesta (SOLIDARIDAD)",
+      text: "SOLIDARIDAD está en Demo con un potencial de <b>US$15k setup + 12m</b>. Necesita pasar rápido a Propuesta antes de que se enfríe.",
+      data: "1 demo activo · ticket pequeño pero ARR mensual repetible",
+      bullets: [
+        "Enviar propuesta formal en menos de 7 días post-demo.",
+        "Incluir caso de éxito comparable (clínica/centro médico similar).",
+        "Definir criterio de no-respuesta para mover a 'Perdido' (ej. 30 días).",
+      ],
+    },
+    {
+      pri: "low",
+      tag: "Crecimiento",
+      title: "Cross-sell en cuentas ganadas",
+      text: "Las cuentas ganadas (Grandia, SANNA, La Positiva, RED SALVA, Mapfre OutSourcing) son base instalada para cross-sell de módulos complementarios y localización Perú.",
+      data: ganados.length + " cuentas activas · LTV 36m: " + fmtShort(ganados.reduce((a,d) => a + d.setup + d.m36, 0)),
+      bullets: [
+        "Mapear módulos faltantes por cliente (POS, eCommerce, PLE, SIRE).",
+        "Generar plan de expansión a 6 meses por cuenta.",
+        "Asignar Customer Success para detectar nuevas necesidades.",
+      ],
+    },
+    {
+      pri: "low",
+      tag: "Higiene CRM",
+      title: "Limpiar datos del pipeline",
+      text: "Se detectaron inconsistencias menores (mayúsculas/minúsculas en empresa, tildes en cliente) y filas con valores en blanco. Estandarizar para reportes confiables.",
+      data: "Estados sin proceso definido · campos vacíos en setup/mensualidad",
+      bullets: [
+        "Definir lista cerrada de Estados (eliminar variantes 'Firma' vs 'Fima').",
+        "Hacer obligatorios setup + mensualidad al pasar a 'Propuesta'.",
+        "Estandarizar nombres de empresa (NOVIT/SHARKY en mayúsculas).",
+      ],
+    },
+  ];
+
+  document.getElementById("recoGrid").innerHTML = recos.map(r => `
+    <div class="reco priority-${r.pri}">
+      <span class="reco-tag">${r.tag}</span>
+      <h3>${r.title}</h3>
+      <p>${r.text}</p>
+      <ul>${r.bullets.map(b => `<li>${b}</li>`).join("")}</ul>
+      <div class="data">${r.data}</div>
+    </div>
+  `).join("");
+}
+
+function renderAll() {
+  renderKPIs();
+  renderEstadoChart();
+  renderEmpresaChart();
+  renderClientesChart();
+  renderProyeccionChart();
+  renderFunnelChart();
+  renderTable();
+  renderRecomendaciones();
+}
+
+document.querySelectorAll("#empresaFilter .filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#empresaFilter .filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeEmpresa = btn.dataset.emp;
+    renderAll();
+  });
+});
+
+const LS_MANT = "novit_crm_mantenimiento_v1";
+function loadMantChecks() {
+  try { return JSON.parse(localStorage.getItem(LS_MANT) || "{}"); } catch { return {}; }
+}
+function saveMantChecks(obj) {
+  try { localStorage.setItem(LS_MANT, JSON.stringify(obj)); } catch {}
+}
+
+const TASKS_DEF = [
+  { id: "estados", label: "Documentar lista cerrada de estados del pipeline.", hint: "Sin variantes (p. ej. una sola etiqueta para firma)." },
+  { id: "obligatorios", label: "Regla: al pasar a Propuesta, setup y mensualidad son obligatorios.", hint: "Evita filas con totales en blanco en reportes." },
+  { id: "empresa", label: "Estandarizar empresa a NOVIT o SHARKY (mayúsculas).", hint: "Coherente con filtros y gráficos por empresa." },
+];
+
+const TASKS_HIGIENE = [
+  { id: "dup", label: "Revisar duplicados lógicos (mismo cliente + proyecto + estado).", hint: "Fusionar o cerrar el duplicado según política." },
+  { id: "vacios", label: "Corregir oportunidades activas con setup o mensualidad en cero.", hint: "Priorizar Propuesta y Negociación." },
+  { id: "nombres", label: "Normalizar nombres de cliente (tildes, espacios dobles).", hint: "Mejora el Top Clientes y totales." },
+  { id: "semanal", label: "Auditoría semanal: 15 min revisando estados vs actividad real.", hint: "Evita pipeline fantasma." },
+];
+
+const TASKS_BACKUP = [
+  { id: "sheet", label: "Confirmar que la hoja Google Sheet es la fuente de verdad (enlace arriba en esta vista).", hint: "Este dashboard refleja un export / copia." },
+  { id: "fecha", label: "Registrar fecha de última sincronización en el CRM.", hint: "Alineación equipo comercial + operaciones." },
+];
+
+function wireChecklist(ulId, tasks, group) {
+  const ul = document.getElementById(ulId);
+  const saved = loadMantChecks();
+  ul.innerHTML = tasks.map(t => {
+    const key = `${group}_${t.id}`;
+    const ck = saved[key] ? "checked" : "";
+    return `<li><input type="checkbox" id="chk_${key}" data-mant="${key}" ${ck}><label for="chk_${key}">${t.label}<span class="hint">${t.hint}</span></label></li>`;
+  }).join("");
+  ul.querySelectorAll("input[data-mant]").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const s = loadMantChecks();
+      s[inp.dataset.mant] = inp.checked;
+      saveMantChecks(s);
+    });
+  });
+}
+
+function renderDiagMantenimiento() {
+  const total = DEALS.length;
+  const empresasOk = DEALS.every(d => ["NOVIT", "SHARKY"].includes(d.empresa.toUpperCase()));
+  const sinMontoCritico = DEALS.filter(d =>
+    ["Propuesta", "Negociación", "Demo"].includes(d.estado) && (!d.setup && !d.m12)
+  ).length;
+  const propuestaSinCompleto = DEALS.filter(d =>
+    d.estado === "Propuesta" && (!d.setup || !d.mensualidad)
+  ).length;
+
+  const cards = [
+    { n: total, lbl: "Registros en pipeline", cls: "" },
+    { n: propuestaSinCompleto, lbl: "Propuestas sin setup o mensualidad", cls: propuestaSinCompleto ? "warn" : "ok" },
+    { n: sinMontoCritico, lbl: "Activos sin valor (setup y 12m en cero)", cls: sinMontoCritico ? "warn" : "ok" },
+    { n: empresasOk ? "Sí" : "No", lbl: "Solo NOVIT / SHARKY", cls: empresasOk ? "ok" : "warn" },
+  ];
+
+  document.getElementById("diagGrid").innerHTML = cards.map(c => `
+    <div class="diag-card ${c.cls}"><div class="n">${c.n}</div><div class="lbl">${c.lbl}</div></div>
+  `).join("");
+}
+
+function resizeCharts() {
+  requestAnimationFrame(() => {
+    Object.values(charts).forEach(c => {
+      if (c && typeof c.resize === "function") c.resize();
+    });
+  });
+}
+
+function setView(view) {
+  const dash = document.getElementById("viewDashboard");
+  const mant = document.getElementById("viewMantenimiento");
+  const filt = document.getElementById("empresaFilter");
+  const title = document.getElementById("mainTitle");
+  const sub = document.getElementById("mainSubtitle");
+
+  document.querySelectorAll(".sidebar .nav-item").forEach(b => {
+    b.classList.toggle("active", b.dataset.view === view);
+  });
+
+  if (view === "dashboard") {
+    dash.classList.remove("hidden");
+    mant.classList.add("hidden");
+    filt.style.display = "flex";
+    title.textContent = "Dashboard de Ventas";
+    sub.textContent = "Pipeline NOVIT / SHARKY · Resumen comercial · 2026";
+    resizeCharts();
+  } else {
+    dash.classList.add("hidden");
+    mant.classList.remove("hidden");
+    filt.style.display = "none";
+    title.textContent = "Mantenimiento CRM";
+    sub.textContent = "Calidad de datos · Gobierno del pipeline · 2026";
+    renderDiagMantenimiento();
+    renderMantTable();
+  }
+}
+
+document.getElementById("navDashboard").addEventListener("click", () => setView("dashboard"));
+document.getElementById("navMantenimiento").addEventListener("click", () => setView("mantenimiento"));
+
+wireChecklist("checklistDef", TASKS_DEF, "def");
+wireChecklist("checklistHigiene", TASKS_HIGIENE, "hig");
+wireChecklist("checklistBackup", TASKS_BACKUP, "bak");
+
+wireMantenimientoUI();
+renderAll();
+tryInitialSheetLoad();
+</script>
+</body>
+</html>
