@@ -2007,11 +2007,13 @@ function renderClientesView() {
     }
     const c = grouped[d.cliente];
     c.deals.push(d);
-    c.setup += d.setup;
-    c.mensualidad += d.mensualidad;
-    c.m12 += d.m12;
-    c.m24 += d.m24;
-    c.m36 += d.m36;
+    if (d.estado !== "Perdido") {
+      c.setup += d.setup;
+      c.mensualidad += d.mensualidad;
+      c.m12 += d.m12;
+      c.m24 += d.m24;
+      c.m36 += d.m36;
+    }
     c.empresas.add(d.empresa.toUpperCase());
   });
 
